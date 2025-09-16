@@ -17,6 +17,7 @@ ext {
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
 
@@ -31,6 +32,7 @@ dependencies {
     //implementation("io.github.a2asdk:a2a-java-sdk-reference-jsonrpc:0.3.0.Alpha1")
 
     testImplementation 'org.jetbrains.kotlin:kotlin-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
 dependencyManagement {
@@ -46,4 +48,8 @@ kotlin {
 // Configure tests
 tasks.test {
     useJUnitPlatform()
+}
+
+bootBuildImage {
+    name = "ai-workflow"
 }

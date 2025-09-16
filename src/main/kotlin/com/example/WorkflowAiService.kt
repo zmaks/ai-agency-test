@@ -1,23 +1,16 @@
 package com.example
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.example.util.Resources
 import org.slf4j.LoggerFactory
 import org.springframework.ai.chat.client.ChatClient
-import org.springframework.core.io.ClassPathResource
 import org.springframework.stereotype.Service
-import java.nio.file.Files
-import java.time.Instant
-import kotlin.io.path.Path
 
 @Service
 class WorkflowAiService(
     private val chatClientBuilder: ChatClient.Builder,
-    private val objectMapper: ObjectMapper
 ) {
 
     private val logger = LoggerFactory.getLogger(WorkflowAiService::class.java)
-
-    data class ChatResult(val workflow: Map<*, *>)
 
     // Default system prompt to enforce JSON-only workflow modifications
     private val defaultSystemPrompt: String = """
@@ -48,15 +41,14 @@ When modifying workflows:
 6. Return ONLY the modified JSON workflow, no other text
 7. Use next property for nodes to link them, don't add additional connections.
 8. Follow the example strictly. 
+9. Use only provided node types.
 
 """.trim()
 
-    // Load workflow.json example from resources once
-    private val workflowExample: String = runCatching {
-        ClassPathResource("workflow.json").inputStream.bufferedReader().use { it.readText() }
-    }.getOrElse { "" }
+    private val workflowExample = Resources.read("workflow.json")
+    private val nodes = Resources.read("nodes.json")
 
-    fun chat(request: WorkflowRequest): ChatResult {
+    fun generate(request: WorkflowRequest): WorkflowResponse {
         val prompt = request.prompt
         val workflow = request.workflow
 
@@ -66,8 +58,10 @@ When modifying workflows:
         val systemPrelude = buildString {
             append(defaultSystemPrompt)
             append("\n\n")
-            val workflowJson = request.workflow?.let { objectMapper.writeValueAsString(it) }
-            if (workflowJson?.isNotBlank() == true) {
+            append("Available node types:\n")
+            append(nodes)
+            append("\n\n")
+            if (workflow?.isNotBlank() == true) {
                 append("Existing workflow:\n")
                 append(workflow)
             } else {
@@ -83,11 +77,10 @@ When modifying workflows:
             .content()
             ?: error("No response content")
 
-        Files.writeString(Path("local/response-${Instant.now()}.json"), content)
+        //Files.writeString(Path("local/response-${Instant.now()}.json"), content)
 
         logger.info("Workflow response:\n $content")
 
-        val result = objectMapper.readValue(content, Map::class.java)
-        return ChatResult(workflow = result)
+        return WorkflowResponse(content = content)
     }
 }

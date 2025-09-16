@@ -1,0 +1,19 @@
+# fly.toml app configuration file generated for hktn2025-22-ai-workflow on 2025-09-16T15:46:31+02:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'hktn2025-22-ai-workflow'
+primary_region = 'cdg'
+
+[build]
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+
+[[vm]]
+  size = 'shared-cpu-1x'
+  memory = '512mb'
