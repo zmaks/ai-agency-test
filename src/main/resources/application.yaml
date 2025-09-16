@@ -8,9 +8,6 @@ spring:
           #model: gpt-4o-mini
           temperature: 1
           model: gpt-4.1-mini
-  graphql:
-    cors:
-      allowed-origins: "*"
   main:
     banner-mode: off
 server:
@@ -22,6 +19,8 @@ management:
     web:
       exposure:
         include: health,info
+      cors:
+        allowed-origins: "*"
   endpoint:
     health:
       probes:

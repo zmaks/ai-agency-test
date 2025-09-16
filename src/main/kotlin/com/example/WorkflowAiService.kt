@@ -1,6 +1,7 @@
 package com.example
 
 import com.example.util.Resources
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
 import org.springframework.ai.chat.client.ChatClient
 import org.springframework.stereotype.Service
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Service
 @Service
 class WorkflowAiService(
     private val chatClientBuilder: ChatClient.Builder,
+    private val objectMapper: ObjectMapper
 ) {
 
     private val logger = LoggerFactory.getLogger(WorkflowAiService::class.java)
@@ -42,6 +44,10 @@ When modifying workflows:
 7. Use next property for nodes to link them, don't add additional connections.
 8. Follow the example strictly. 
 9. Use only provided node types.
+10. Dont include linebreaks in the JSON.
+11. Verify that the returned workflow is a valid JSON.
+
+Remember: Respond with ONLY the JSON object, no other text.`
 
 """.trim()
 
@@ -89,6 +95,29 @@ When modifying workflows:
 
         logger.info("Workflow response:\n $content")
 
-        return WorkflowResponse(content = content)
+        val json = ensureValidJson(content)
+        return WorkflowResponse(content = json)
+    }
+
+    private fun ensureValidJson(content: String, attempt: Int = 1): String {
+        if (attempt > 3) error("Failed to parse response after $attempt attempts")
+        try {
+            objectMapper.readTree(content)
+            return content
+        } catch (e: Exception) {
+            logger.warn("Failed to parse response, attempt $attempt", e)
+            val json = fixJson(content)
+            return ensureValidJson(json, attempt + 1)
+        }
+    }
+
+    private fun fixJson(content: String): String {
+        val client = chatClientBuilder.build()
+        return client.prompt()
+            .system("Fix given json. RETURN ONLY VALID JSON")
+            .user(content)
+            .call()
+            .content()
+            ?: error("No response content")
     }
 }
