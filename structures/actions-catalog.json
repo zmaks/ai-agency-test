@@ -1,7 +1,7 @@
 [
   {
     "id": "youtrack.add_issue_comment",
-    "title": "Add Issue Comment",
+    "name": "Add Issue Comment",
     "description": "Adds a new comment to the specified issue. Supports Markdown.",
     "inputSchema": {
       "type": "object",
@@ -24,7 +24,7 @@
   },
   {
     "id": "youtrack.change_issue_assignee",
-    "title": "Change Issue Assignee",
+    "name": "Change Issue Assignee",
     "description": "Sets the Assignee of an issue to the specified user.",
     "inputSchema": {
       "type": "object",
@@ -47,7 +47,7 @@
   },
   {
     "id": "youtrack.create_draft_issue",
-    "title": "Create Draft Issue",
+    "name": "Create Draft Issue",
     "description": "Creates a new draft issue in the specified project. Draft issues visible only for the current user and can be edited using update_issue. Returns the created issue ID and URL to open in browser.",
     "inputSchema": {
       "type": "object",
@@ -83,7 +83,7 @@
   },
   {
     "id": "youtrack.create_issue",
-    "title": "Create Issue",
+    "name": "Create Issue",
     "description": "Creates a new issue in the specified project. Use get_issue_fields_schema to discover `customFields` and their possible values for the project. Important: some of the custom fields might be required to create an issue. Returns the created issue ID and URL. Use get_issue to get the full issue details.",
     "inputSchema": {
       "type": "object",
@@ -172,7 +172,7 @@
   },
   {
     "id": "youtrack.find_projects",
-    "title": "Find Projects",
+    "name": "Find Projects",
     "description": "Finds projects whose names contain the specified substring (case-insensitive). Returns minimal info (key and name) to help pick a project for get_project. Response is paginated via offset and limit.",
     "inputSchema": {
       "type": "object",
@@ -218,7 +218,7 @@
   },
   {
     "id": "youtrack.find_user",
-    "title": "Find User",
+    "name": "Find User",
     "description": "Finds user by login or email (provide either login or email). Returns the user profile information: login, name, email, time zone.",
     "inputSchema": {
       "type": "object",
@@ -253,7 +253,7 @@
   },
   {
     "id": "youtrack.find_user_groups",
-    "title": "Find User Groups",
+    "name": "Find User Groups",
     "description": "Finds user groups or project teams whose names contain the specified substring (case-insensitive). Response is paginated via offset and limit.",
     "inputSchema": {
       "type": "object",
@@ -298,7 +298,7 @@
   },
   {
     "id": "youtrack.get_current_user",
-    "title": "Get Current User",
+    "name": "Get Current User",
     "description": "Returns details about the currently authenticated user (me): login, email, name, time zone.",
     "inputSchema": {
       "type": "object",
@@ -326,7 +326,7 @@
   },
   {
     "id": "youtrack.get_issue",
-    "title": "Get Issue",
+    "name": "Get Issue",
     "description": "Returns issue or draft issue details like summary (title), description, url, project, reporter (login), tags, votes and custom fields. The `customFields` output property provides important issue details: Type, State, Assignee, Priority, Subsystem, etc. Use get_issue_fields_schema for the full relevant list of custom fields and their possible values.",
     "inputSchema": {
       "type": "object",
@@ -474,7 +474,7 @@
   },
   {
     "id": "youtrack.get_issue_comments",
-    "title": "Get Issue Comments",
+    "name": "Get Issue Comments",
     "description": "Returns the list of issue comments with the full content. Response is paginated via offset and limit.",
     "inputSchema": {
       "type": "object",
@@ -561,7 +561,7 @@
   },
   {
     "id": "youtrack.get_issue_fields_schema",
-    "title": "Get Issue Fields Schema",
+    "name": "Get Issue Fields Schema",
     "description": "Returns issue fields JSON schema for the specified project. Must be used to provide relevant custom fields and values create_issue and update_issue actions.",
     "inputSchema": {
       "type": "object",
@@ -602,7 +602,7 @@
   },
   {
     "id": "youtrack.get_project",
-    "title": "Get Project",
+    "name": "Get Project",
     "description": "Retrieves full details for a specific project.",
     "inputSchema": {
       "type": "object",
@@ -662,7 +662,7 @@
   },
   {
     "id": "youtrack.get_saved_issue_searches",
-    "title": "Get Saved Issue Searches",
+    "name": "Get Saved Issue Searches",
     "description": "Returns saved issue searches marked as favorite by the current user. The output search queries can be used in search_issues. Response is paginated via offset and limit.",
     "inputSchema": {
       "type": "object",
@@ -701,7 +701,7 @@
   },
   {
     "id": "youtrack.get_user_group_members",
-    "title": "Get User Group Members",
+    "name": "Get User Group Members",
     "description": "Lists members of a given user group or project team (Project team is a subtype of User Group). Response is paginated via offset and limit.",
     "inputSchema": {
       "type": "object",
@@ -745,7 +745,7 @@
   },
   {
     "id": "youtrack.link_issues",
-    "title": "Link Issues",
+    "name": "Link Issues",
     "description": "Links two issues with specified link type.\n  Examples:\n  - TS-1 is a subtask of TS-2: {\"targetIssueId\": \"TS-1\", \"linkType\": \"subtask of\", \"issueToLinkId\": \"TS-2\"};\n  - TS-4 is a duplicate of TS-3: {\"targetIssueId\": \"TS-4\", \"linkType\": \"duplicates\", \"issueToLinkId\": \"TS-3\"};\n  - TS-1 is blocked by TS-2: {\"targetIssueId\": \"TS-1\", \"linkType\": \"blocked by\", \"issueToLinkId\": \"TS-2\"};\n  Returns updated link counts for all target issue link types.\n  ",
     "inputSchema": {
       "type": "object",
@@ -789,7 +789,7 @@
   },
   {
     "id": "youtrack.manage_issue_tags",
-    "title": "Manage Issue Tags",
+    "name": "Manage Issue Tags",
     "description": "Adds or removes a tag from an issue. If a name is passed, adds the first matching tag by name. If tag not found, the returns error message with similar tags suggestions. Returns the issue ID and updated list of issue tags.",
     "inputSchema": {
       "type": "object",
@@ -821,7 +821,7 @@
   },
   {
     "id": "youtrack.update_issue",
-    "title": "Update Issue",
+    "name": "Update Issue",
     "description": "Updates an existing issue and its fields (customFields). Pass any of the arguments to partially update the issue:\n- 'summary' or 'description' arguments to update only the issue summary or description.\n- 'customFields' argument as key-value JSON object to update issue fields like State, Type, Priority, etc. Use get_issue_fields_schema to discover 'customFields' and their possible values.\n- 'parentIssue' argument to link current issue (issueId) as a subtask. Use only if the issue is explicitly requested to be a subtask.\n- 'relatedIssue' argument to link current issue (issueId) as a related issue. Use only if the issue is explicitly requested to be a related issue.\n- 'subscription' argument to subscribe (true) or unsubscribe (false) the current user from the issue updates. If subscribed, the user receives notification about the issue updates.\n- 'vote' argument to vote (true) or unvote (false) the current user for the issue. If voted, the user receives notification about the issue updates.\nReturns updated issue ID and the confirmation what was updated.",
     "inputSchema": {
       "type": "object",
@@ -867,7 +867,7 @@
   },
   {
     "id": "youtrack.search_issues",
-    "title": "Search Issues",
+    "name": "Search Issues",
     "description": "Searches issues using YouTrack’s query language. The 'query' can combine attribute filters, keywords and free text. Examples of common patterns:\n\n- Free text: Just type words to search in summary, description and comments. Use wildcards: '*' for any characters, '?' for single character (e.g., 'summary: log*', 'fix??'). Examples: 'login button bug', 'some other text', 'summary: log*', 'description: fix??'.\n- Linked issues: '<linkType>: <issueId>'. Examples: 'relates to: DEMO-123', 'subtask of: DEMO-123' (issues where DEMO-123 is a parent). Hint: get_issue returns 'linkedIssueCounts' property which shows the available link types for the issue.\n- Mentioned it issues: 'mentions: <issueId>'. Examples: 'mentions: DEMO-123'.\n- Project filter: 'project: <ProjectName>'. Use project name or project key. Examples: 'project: {Mobile App}', 'project: MA'.\n- Assignee filter: 'for: <login>'. Use 'me' for the currently authenticated user. Examples: 'for: me', 'for: john.smith'.\n- Reporter filter: 'reporter: <username>'. Use 'me' for the currently authenticated user. Examples: 'reporter: me', 'reporter: admin'.\n- Tag filter: 'tag: <TagName>'. Wrap multi-word tags in braces { }. Examples: 'tag: urgent', 'tag: {customer feedback}'.\n- Field filter: '<FieldName>: <Value>'. For any project field, e.g., State, Type, Priority, etc. Wrap multi-word names or values in { }. Use get_project to get the possible fields and values for the project issues to search. Use '-' as 'not', e.g., 'State: -Fixed' filters out fixed issues. Examples: 'Priority: High', 'State: {In Progress}, Fixed' (searches issues with 'In Progress' state + issues with 'Fixed' state), 'Due Date: {plus 5d}' (issues that are due in five days).\n- Date filters: 'created:', 'updated:', 'resolved date:' (or any date field) plus a date, range, or relative period. Relative periods: 'today', 'yesterday', '{This week}', '{Last week}', '{This month}', etc. Examples: 'created: {This month}', 'updated: today', 'resolved date: 2025-06-01 .. 2025-06-30', 'updated: {minus 2h} .. *' (issues updated last 2 hours), 'created: * .. {minus 1y 6M}' (issues that are at least one and a half years old).\n- Keywords: '#Unresolved' to find unresolved issues based on the State; '#Resolved' to find resolved/finished issues.\n- Combining filters: List multiple conditions separated by spaces (logical AND). For OR operator, add it explicitly. Examples: '(project: MA) and (for: me) and (created: {minus 8h} .. *) and runtime error' (issues in project MA and assigned to currently authenticated user and created during last 8h and contains 'runtime error' text), '(Type: Task and State: Open) or (Type: Bug and Priority: Critical)'.\n\nReturns basic info: id, summary, project, resolved, reporter, created, updated. For full details, use get_issue. Response is paginated via offset and limit.",
     "inputSchema": {
       "type": "object",
