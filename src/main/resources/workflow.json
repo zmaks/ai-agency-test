@@ -1,0 +1,123 @@
+{
+  "name": "PDF Mentions → Comment (Prototypes-based)",
+  "version": "poc-2",
+  "nodes": [
+    {
+      "id": "attachment_added",
+      "type": "trigger.onchange",
+      "name": "Event Trigger",
+      "description": "Receives YouTrack 'attachment added' event and exposes it as `event`.",
+      "next": [
+        {
+          "nextNodeId": "pick_ids",
+          "relationDescription": "Produces event consumed by Pick IDs."
+        }
+      ]
+    },
+    {
+      "id": "pick_ids",
+      "type": "js",
+      "name": "Pick IDs",
+      "description": "Extracts issueId and attachmentId from the trigger event.",
+      "params": {
+        "code": "const e=inputs.data||{}; return { issueId:e.issueId, attachmentId:e.attachmentId };"
+      },
+      "next": [
+        {
+          "nextNodeId": "get_attachment",
+          "relationDescription": "Provides IDs to YouTrack: GetAttachment."
+        }
+      ]
+    },
+    {
+      "id": "get_attachment",
+      "type": "action.youtrack",
+      "name": "YouTrack: GetAttachment",
+      "description": "Downloads the attachment and returns blobRef, mimeType, filename.",
+      "actionId": "get_attachment",
+      "params": {
+        "issueId": "#pick_ids.output.issueId",
+        "attachmentId": "#pick_ids.output.attachmentId"
+      },
+      "next": [
+        {
+          "nextNodeId": "mentions_extract",
+          "relationDescription": "Provides the downloaded file to LLM Extract Mentions."
+        }
+      ]
+    },
+    {
+
+      "id": "mentions_extract",
+      "type": "llm.extract",
+      "name": "LLM Extract Mentions",
+      "description": "Consumes file (auto PDF→text), extracts YouTrack issue keys into `object.mentions`.",
+      "params": {
+        "instructions": "Extract YouTrack issue keys like ABC-123. Return strict JSON per schema.",
+        "outputJsonSchema": {
+          "type": "object",
+          "properties": { "mentions": { "type": "array", "items": { "type": "string" } } },
+          "required": ["mentions"]
+        },
+        "mimeType": "#get_attachment.output.mimeType",
+        "base64content": "#get_attachment.output.blobRef",
+        "filename": "#get_attachment.output.filename"
+      },
+      "next": [
+        {
+          "nextNodeId": "has_mentions",
+          "relationDescription": "Sends extracted mentions to Has Mentions?"
+        }
+      ]
+    },
+    {
+      "id": "has_mentions",
+      "type": "js",
+      "name": "Has Mentions?",
+      "description": "Normalizes to uppercase, dedupes, and sets boolean `ok`.",
+      "params": {
+        "code": "const m=(args.mentions||[]).map(s=>String(s).toUpperCase()); const uniq=[...new Set(m)]; return { ok: uniq.length>0, mentions: uniq };",
+        "args": "#mentions_extract.result"
+      },
+      "next": [
+        {
+          "nextNodeId": "comment_text",
+          "relationDescription": "Runs only when mentions exist.",
+          "invokeCondition": "#this.output.ok == true"
+        },
+        {
+          "nextNodeId": "exit",
+          "relationDescription": "Stop when there are no mentions.",
+          "invokeCondition": "#this.output.ok != true"
+        }
+      ]
+    },
+    {
+      "id": "comment_text",
+      "type": "template",
+      "name": "Build Comment Text",
+      "description": "Creates a comment like: “Found issue mentions in attachment: ...",
+      "params": {
+        "template": "Found issue mentions in attachment: {{input.mentions.join(', ')}}",
+        "args": ""
+      },
+      "next": [
+        {
+          "nextNodeId": "add_comment",
+          "relationDescription": "Executes after comment text has been prepared."
+        }
+      ]
+    },
+    {
+      "id": "add_comment",
+      "type": "action.youtrack",
+      "name": "YouTrack: AddComment",
+      "description": "Posts the generated comment to the issue.",
+      "actionId": "add_comment",
+      "params": {
+        "issueId": "#attachment_added.output.issueId",
+        "text": "#comment_text.output"
+      }
+    }
+  ]
+}

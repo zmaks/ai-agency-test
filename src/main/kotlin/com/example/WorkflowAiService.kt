@@ -1,0 +1,93 @@
+package com.example
+
+import com.fasterxml.jackson.databind.ObjectMapper
+import org.slf4j.LoggerFactory
+import org.springframework.ai.chat.client.ChatClient
+import org.springframework.core.io.ClassPathResource
+import org.springframework.stereotype.Service
+import java.nio.file.Files
+import java.time.Instant
+import kotlin.io.path.Path
+
+@Service
+class WorkflowAiService(
+    private val chatClientBuilder: ChatClient.Builder,
+    private val objectMapper: ObjectMapper
+) {
+
+    private val logger = LoggerFactory.getLogger(WorkflowAiService::class.java)
+
+    data class ChatResult(val workflow: Map<*, *>)
+
+    // Default system prompt to enforce JSON-only workflow modifications
+    private val defaultSystemPrompt: String = """
+You are a workflow modification expert. You will receive a JSON workflow definition and a modification request. Your task is to return a modified workflow JSON that implements the requested changes.
+
+CRITICAL: You must respond with ONLY valid JSON. Do not include any explanatory text, comments, or markdown formatting. Start your response with { and end with }.
+
+The workflow follows this structure:
+- nodes: Array of workflow steps with id, type, name, explain, config, inputs, outputs
+- connections: Array of connections between nodes
+- Each node has a type like "youtrack.trigger.attachmentAdded", "logic.filter", "pdf.extractText", etc.
+
+Common node types:
+- youtrack.*: YouTrack integration nodes
+- logic.*: Logic operations (filter, condition)
+- pdf.*: PDF processing
+- text.*: Text processing
+- array.*: Array operations
+- email.*: Email operations
+- slack.*: Slack integration
+
+When modifying workflows:
+1. Preserve the existing structure and IDs where possible
+2. Add new nodes with unique IDs (nX_name format)
+3. Update connections to include new nodes
+4. Maintain the workflow's logical flow
+5. Update node names and explanations to be user-friendly
+6. Return ONLY the modified JSON workflow, no other text
+7. Use next property for nodes to link them, don't add additional connections.
+8. Follow the example strictly. 
+
+""".trim()
+
+    // Load workflow.json example from resources once
+    private val workflowExample: String = runCatching {
+        ClassPathResource("workflow.json").inputStream.bufferedReader().use { it.readText() }
+    }.getOrElse { "" }
+
+    fun chat(request: WorkflowRequest): ChatResult {
+        val prompt = request.prompt
+        val workflow = request.workflow
+
+        logger.info("Workflow prompt: $prompt")
+        val client = chatClientBuilder.build()
+
+        val systemPrelude = buildString {
+            append(defaultSystemPrompt)
+            append("\n\n")
+            val workflowJson = request.workflow?.let { objectMapper.writeValueAsString(it) }
+            if (workflowJson?.isNotBlank() == true) {
+                append("Existing workflow:\n")
+                append(workflow)
+            } else {
+                append("Example workflow JSON (for guidance):\n")
+                append(workflowExample)
+            }
+        }.trim()
+
+        val content = client.prompt()
+            .system(systemPrelude)
+            .user(prompt)
+            .call()
+            .content()
+            ?: error("No response content")
+
+        Files.writeString(Path("local/response-${Instant.now()}.json"), content)
+
+        logger.info("Workflow response:\n $content")
+
+        val result = objectMapper.readValue(content, Map::class.java)
+        return ChatResult(workflow = result)
+    }
+}

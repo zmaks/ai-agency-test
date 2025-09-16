@@ -1,0 +1,13 @@
+
+spring:
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY: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}
+      chat:
+        options:
+          #model: gpt-4o-mini
+          temperature: 1
+          model: gpt-4.1-mini
+server:
+  tomcat:
+    connection-timeout: 60000

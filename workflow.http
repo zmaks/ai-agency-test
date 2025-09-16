@@ -1,0 +1,173 @@
+@host = http://localhost:8080
+
+### Basic workflow call
+POST {{host}}/api/workflows
+Content-Type: application/json
+
+{
+  "prompt": "Workflow to extract issue ids from attached pdf"
+}
+
+
+### Change workflow
+POST {{host}}/api/workflows
+Content-Type: application/json
+
+{
+  "prompt": "Lets include issues that only has PROJECT in their title if mentioned along the ticket number in pdf",
+  "workflow": {
+  "name": "Extract Issue IDs from PDF Attachments",
+  "version": "v1",
+  "nodes": [
+    {
+      "id": "attachment_added",
+      "type": "youtrack.trigger.attachmentAdded",
+      "name": "Attachment Added Trigger",
+      "description": "Receives YouTrack 'attachment added' event and exposes it as `event`.",
+      "next": [
+        {
+          "nextNodeId": "pick_ids",
+          "relationDescription": "Passes event to Pick IDs."
+        }
+      ]
+    },
+    {
+      "id": "pick_ids",
+      "type": "js",
+      "name": "Pick IDs",
+      "description": "Extracts issueId and attachmentId from the trigger event.",
+      "params": {
+        "code": "const e = inputs.data || inputs.event || {}; return { issueId: e.issueId || e.issue?.id || null, attachmentId: e.attachmentId || e.attachment?.id || null };",
+        "args": "#attachment_added.output"
+      },
+      "next": [
+        {
+          "nextNodeId": "get_attachment",
+          "relationDescription": "Provides IDs to YouTrack: GetAttachment."
+        }
+      ]
+    },
+    {
+      "id": "get_attachment",
+      "type": "action.youtrack",
+      "name": "YouTrack: GetAttachment",
+      "description": "Downloads the attachment and returns blobRef, mimeType, filename.",
+      "actionId": "get_attachment",
+      "params": {
+        "issueId": "#pick_ids.output.issueId",
+        "attachmentId": "#pick_ids.output.attachmentId"
+      },
+      "next": [
+        {
+          "nextNodeId": "pdf_extract",
+          "relationDescription": "Sends downloaded file to PDF text extractor."
+        }
+      ]
+    },
+    {
+      "id": "pdf_extract",
+      "type": "pdf.extractText",
+      "name": "Extract PDF Text",
+      "description": "Extracts text from the downloaded PDF attachment.",
+      "params": {
+        "mimeType": "#get_attachment.output.mimeType",
+        "base64content": "#get_attachment.output.blobRef",
+        "filename": "#get_attachment.output.filename"
+      },
+      "next": [
+        {
+          "nextNodeId": "extract_ids",
+          "relationDescription": "Provides extracted text to Issue ID extractor."
+        }
+      ]
+    },
+    {
+      "id": "extract_ids",
+      "type": "llm.extract",
+      "name": "Extract Issue IDs",
+      "description": "Parses the extracted text and returns YouTrack issue keys like ABC-123 as JSON { mentions: [...] }.",
+      "params": {
+        "instructions": "From the provided text, extract all YouTrack issue keys in the form PROJECT-123 (uppercase or mixed). Return strict JSON with a single property `mentions` which is an array of strings, e.g. { \"mentions\": [\"ABC-123\"] }. Do not return any additional text.",
+        "outputJsonSchema": {
+          "type": "object",
+          "properties": {
+            "mentions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "mentions"
+          ]
+        },
+        "text": "#pdf_extract.output.text"
+      },
+      "next": [
+        {
+          "nextNodeId": "normalize_ids",
+          "relationDescription": "Normalizes and dedupes extracted IDs."
+        }
+      ]
+    },
+    {
+      "id": "normalize_ids",
+      "type": "js",
+      "name": "Normalize & Dedupe",
+      "description": "Uppercases, trims, and deduplicates extracted issue IDs; sets `ok` when any found.",
+      "params": {
+        "code": "const m = (args.mentions || []).map(s => String(s || '').trim().toUpperCase()).filter(s => s.length>0); const uniq = [...new Set(m)]; return { ok: uniq.length > 0, mentions: uniq };",
+        "args": "#extract_ids.result"
+      },
+      "next": [
+        {
+          "nextNodeId": "build_comment",
+          "relationDescription": "Continue when mentions were found.",
+          "invokeCondition": "#this.output.ok == true"
+        },
+        {
+          "nextNodeId": "exit",
+          "relationDescription": "Stop when no mentions were found.",
+          "invokeCondition": "#this.output.ok != true"
+        }
+      ]
+    },
+    {
+      "id": "build_comment",
+      "type": "template",
+      "name": "Build Comment Text",
+      "description": "Creates a comment listing the found issue mentions.",
+      "params": {
+        "args": "#normalize_ids.output"
+      },
+      "next": [
+        {
+          "nextNodeId": "add_comment",
+          "relationDescription": "Posts the prepared comment to the issue."
+        }
+      ]
+    },
+    {
+      "id": "add_comment",
+      "type": "action.youtrack",
+      "name": "YouTrack: AddComment",
+      "description": "Posts the generated comment to the originating issue.",
+      "actionId": "add_comment",
+      "params": {
+        "issueId": "#pick_ids.output.issueId",
+        "text": "#build_comment.output"
+      }
+    },
+    {
+      "id": "exit",
+      "type": "js",
+      "name": "Exit",
+      "description": "No issue IDs found — end workflow.",
+      "params": {
+        "code": "return {};"
+      }
+    }
+  ]
+}
+}

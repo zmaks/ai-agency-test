@@ -1,5 +1,7 @@
 plugins {
     id 'org.jetbrains.kotlin.jvm' version '2.1.21'
+    id 'org.springframework.boot' version '3.5.5'
+    id 'io.spring.dependency-management' version '1.1.7'
 }
 
 group = 'com.jetbrains.youtrack'
@@ -9,23 +11,39 @@ repositories {
     mavenCentral()
 }
 
-dependencies {
-    // https://mvnrepository.com/artifact/io.modelcontextprotocol.sdk/mcp
-    implementation("io.modelcontextprotocol.sdk:mcp:0.12.1")
-    implementation("ai.koog:koog-agents:0.4.1")
-    implementation("io.github.a2asdk:a2a-java-sdk-client:0.3.0.Alpha1")
-    implementation("io.github.a2asdk:a2a-java-sdk-client-transport-jsonrpc:0.3.0.Alpha1")
-    implementation("io.github.a2asdk:a2a-java-sdk-reference-jsonrpc:0.3.0.Alpha1")
+ext {
+    set('springAiVersion', "1.0.2")
+}
 
-    // SLF4J backend for KotlinLogging -> logs to stdout via Logback's ConsoleAppender by default
-    implementation("ch.qos.logback:logback-classic:1.5.8")
+dependencies {
+    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+    implementation("org.jetbrains.kotlin:kotlin-reflect")
+
+    // Spring AI for OpenAI integration
+    implementation("org.springframework.ai:spring-ai-starter-model-openai")
+
+    // Existing dependencies (kept if needed elsewhere)
+    //implementation("io.modelcontextprotocol.sdk:mcp:0.12.1")
+    //implementation("ai.koog:koog-agents:0.4.1")
+    //implementation("io.github.a2asdk:a2a-java-sdk-client:0.3.0.Alpha1")
+    //implementation("io.github.a2asdk:a2a-java-sdk-client-transport-jsonrpc:0.3.0.Alpha1")
+    //implementation("io.github.a2asdk:a2a-java-sdk-reference-jsonrpc:0.3.0.Alpha1")
 
     testImplementation 'org.jetbrains.kotlin:kotlin-test'
 }
 
-test {
-    useJUnitPlatform()
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.ai:spring-ai-bom:${springAiVersion}"
+    }
 }
+
 kotlin {
     jvmToolchain(21)
+}
+
+// Configure tests
+tasks.test {
+    useJUnitPlatform()
 }
