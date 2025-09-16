@@ -1,10 +1,10 @@
 {
-  "name": "PDF Mentions → Comment (Prototypes-based)",
+  "name": "PDF Mentions → Comment",
   "version": "poc-2",
   "nodes": [
     {
       "id": "attachment_added",
-      "type": "trigger.onchange",
+      "type": "trigger",
       "name": "Event Trigger",
       "description": "Receives YouTrack 'attachment added' event and exposes it as `event`.",
       "next": [
@@ -20,7 +20,8 @@
       "name": "Pick IDs",
       "description": "Extracts issueId and attachmentId from the trigger event.",
       "input": {
-        "code": "const e=inputs.data||{}; return { issueId:e.issueId, attachmentId:e.attachmentId };"
+        "code": "return { issueId: args.issueId, attachmentId: args.attachmentId };",
+        "args": "#attachment_added.output.event"
       },
       "next": [
         {
@@ -31,13 +32,16 @@
     },
     {
       "id": "get_attachment",
-      "type": "action.youtrack",
+      "type": "action",
       "name": "YouTrack: GetAttachment",
       "description": "Downloads the attachment and returns blobRef, mimeType, filename.",
-      "actionId": "get_attachment",
       "input": {
-        "issueId": "#pick_ids.output.issueId",
-        "attachmentId": "#pick_ids.output.attachmentId"
+        "actionId": "get_attachment",
+        "provider": "youtrack",
+        "actionInput": {
+          "issueId": "#pick_ids.output.issueId",
+          "attachmentId": "#pick_ids.output.attachmentId"
+        }
       },
       "next": [
         {
@@ -47,11 +51,10 @@
       ]
     },
     {
-      
       "id": "mentions_extract",
       "type": "llm.extract",
       "name": "LLM Extract Mentions",
-      "description": "Consumes file (auto PDF→text), extracts YouTrack issue keys into `object.mentions`.",
+      "description": "Consumes file (auto PDF→text), extracts YouTrack issue keys into result.mentions.",
       "input": {
         "instructions": "Extract YouTrack issue keys like ABC-123. Return strict JSON per schema.",
         "outputJsonSchema": {
@@ -76,8 +79,8 @@
       "name": "Has Mentions?",
       "description": "Normalizes to uppercase, dedupes, and sets boolean `ok`.",
       "input": {
-        "code": "const m=(args.mentions||[]).map(s=>String(s).toUpperCase()); const uniq=[...new Set(m)]; return { ok: uniq.length>0, mentions: uniq };",
-        "args": "#mentions_extract.result"
+        "code": "const m=(args.mentions||[]).map(s=>String(s).toUpperCase()); const uniq=[...new Set(m)]; return { ok: uniq.length>0, mentions: uniq, mentionsCsv: uniq.join(', ') };",
+        "args": "#mentions_extract.output"
       },
       "next": [
         {
@@ -96,10 +99,10 @@
       "id": "comment_text",
       "type": "template",
       "name": "Build Comment Text",
-      "description": "Creates a comment like: “Found issue mentions in attachment: ...",
-      "input": { 
-        "template": "Found issue mentions in attachment: {{input.mentions.join(', ')}}",
-        "args": ""
+      "description": "Creates a comment like: ‘Found issue mentions in attachment: ...’.",
+      "input": {
+        "template": "Found issue mentions in attachment:\n {{args.mentionsCsv}}",
+        "args": "#has_mentions.output"
       },
       "next": [
         {
@@ -110,13 +113,16 @@
     },
     {
       "id": "add_comment",
-      "type": "action.youtrack",
+      "type": "action",
       "name": "YouTrack: AddComment",
       "description": "Posts the generated comment to the issue.",
-      "actionId": "add_comment",
       "input": {
-        "issueId": "#attachment_added.output.issueId",
-        "text": "#comment_text.output"
+        "actionId": "add_comment",
+        "provider": "youtrack",
+        "actionInput": {
+          "issueId": "#attachment_added.output.event.issueId",
+          "text": "#comment_text.output"
+        }
       }
     }
   ]
