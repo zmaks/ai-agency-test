@@ -129,14 +129,9 @@
         "userPrompt": { "type": "string", "description": "User prompt for the LLM." },
         "tools": {
           "type": "array",
-          "description": "Tools the LLM may call; each tool is a wrapper around an action from the Actions Catalog.",
+          "description": "Action IDs array",
           "items": {
-            "type": "object",
-            "properties": {
-              "actionId": { "type": "string", "description": "Action key from the Actions Catalog." },
-              "provider": { "type": "string", "enum": ["youtrack", "mcp", "a2a"], "description": "Action provider." }
-            },
-            "required": ["actionId", "provider"]
+            "type": "string"
           }
         },
         "outputJsonSchema": {
@@ -145,29 +140,22 @@
           "additionalProperties": true
         }
       },
-      "required": ["prompt"]
+      "required": ["userPrompt"]
     },
     "outputSchema": {
       "type": "object",
       "properties": {
-        "output": {
+        "resultText": {
+          "type": "string",
+          "description": "The LLM’s natural-language answer."
+        },
+        "resultJson": {
           "type": "object",
-          "properties": {
-            "userPrompt": {
-              "type": "string",
-              "description": "The LLM’s natural-language answer."
-            },
-            "result": {
-              "type": "object",
-              "description": "Parsed JSON conforming to outputJsonSchema (present only if outputJsonSchema was provided).",
-              "additionalProperties": true
-            }
-          },
-          "required": ["text"],
+          "description": "Parsed JSON conforming to outputJsonSchema (present only if outputJsonSchema was provided).",
           "additionalProperties": true
         }
       },
-      "required": ["output"]
+      "required": ["resultText"]
     }
   },
   {
