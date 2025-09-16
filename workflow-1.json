@@ -1,0 +1,88 @@
+{
+  "name": "PDF Mentions → Comment (Context Model)",
+  "nodes": [
+    {
+      "id": "t1",
+      "type": "trigger.event",
+      "params": {
+        "note": "Webhook entry point. Copies external payload into ctx.event."
+      },
+      "writes": { "event": "$.event" }
+    },
+    {
+      "id": "pick_ids",
+      "type": "transform.js",
+      "params": {
+        "note": "Extract issueId and attachmentId from event to vars.",
+        "code": "const e=inputs.data||{}; return { issueId: e.issueId, attachmentId: e.attachmentId };"
+      },
+      "bindings": { "data": { "ref": "$.event" } },
+      "writes": { "issueId": "$.vars.issueId", "attachmentId": "$.vars.attachmentId" }
+    },
+    {
+      "id": "get_attachment",
+      "type": "adapter.operation",
+      "params": {
+        "note": "Download the attachment and get mimeType/filename.",
+        "capabilityId": "youtrack",
+        "operation": "GetAttachment"
+      },
+      "bindings": {
+        "args.issueId": { "ref": "$.vars.issueId" },
+        "args.attachmentId": { "ref": "$.vars.attachmentId" }
+      }
+    },
+    {
+      "id": "mentions_extract",
+      "type": "llm.extract",
+      "params": {
+        "note": "Single node that handles PDFs internally, then extracts issue keys via JSON schema.",
+        "instructions": "Extract YouTrack issue keys like ABC-123 from the provided content. Return strict JSON.",
+        "jsonSchema": {
+          "type": "object",
+          "properties": { "mentions": { "type": "array", "items": { "type": "string" } } },
+          "required": ["mentions"]
+        },
+        "pdfTextOptions": { "mode": "fast" }
+      },
+      "bindings": {
+        "items": {
+          "ref": "#get_attachment.result"
+        }
+      }
+    },
+    {
+      "id": "has_mentions",
+      "type": "transform.js",
+      "params": {
+        "note": "Normalize & test if any mentions were found.",
+        "code": "const m=(inputs.data?.mentions||[]).map(x=>String(x).toUpperCase()); const uniq=[...new Set(m)]; return { ok: uniq.length>0, mentions: uniq };"
+      },
+      "bindings": { "data": { "ref": "#mentions_extract.object" } }
+    },
+    {
+      "id": "comment_text",
+      "type": "transform.template",
+      "when": { "ref": "#has_mentions.ok" },
+      "params": {
+        "note": "Format the comment body.",
+        "template": "Found issue mentions in attachment: {{mentions.join(', ')}}"
+      },
+      "bindings": { "data": { "ref": "#has_mentions" } }
+    },
+    {
+      "id": "add_comment",
+      "type": "adapter.operation",
+      "when": { "ref": "#has_mentions.ok" },
+      "params": {
+        "note": "Post the comment to YouTrack.",
+        "capabilityId": "youtrack",
+        "operation": "AddComment"
+      },
+      "bindings": {
+        "args.issueId": { "ref": "$.vars.issueId" },
+        "args.text": { "ref": "#comment_text.text" }
+      }
+    }
+  ]
+}
