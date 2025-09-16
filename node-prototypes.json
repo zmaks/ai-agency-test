@@ -61,7 +61,7 @@
         },
         "actionInput": {
           "type": "object",
-          "description": "Corresponds the action input schema",
+          "description": "Corresponds to the action input schema",
           "additionalProperties": true
         }
       },
@@ -76,7 +76,7 @@
   {
     "type": "llm.extract",
     "name": "LLM Extract (Structured)",
-    "description": "Performs LLM-based information extraction. Optionally auto-converts PDFs to text. Returns the model’s parsed JSON under result and helpful diagnostics under meta.",
+    "description": "Performs LLM-based information extraction. Optionally auto-converts PDFs to text. Returns the model’s parsed JSON under output.result and diagnostics under output.meta.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -117,6 +117,57 @@
         }
       },
       "required": ["result"]
+    }
+  },
+  {
+    "type": "llm.call",
+    "name": "LLM Call",
+    "description": "Single-turn LLM call that can optionally use tools (any cataloged action) and/or return structured JSON. Always returns text; if outputJsonSchema is provided, also returns a parsed result object.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "userPrompt": { "type": "string", "description": "User prompt for the LLM." },
+        "tools": {
+          "type": "array",
+          "description": "Tools the LLM may call; each tool is a wrapper around an action from the Actions Catalog.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "actionId": { "type": "string", "description": "Action key from the Actions Catalog." },
+              "provider": { "type": "string", "enum": ["youtrack", "mcp", "a2a"], "description": "Action provider." }
+            },
+            "required": ["actionId", "provider"]
+          }
+        },
+        "outputJsonSchema": {
+          "type": "object",
+          "description": "If provided, the model must also return a JSON object matching this schema (emitted as output.result).",
+          "additionalProperties": true
+        }
+      },
+      "required": ["prompt"]
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "output": {
+          "type": "object",
+          "properties": {
+            "userPrompt": {
+              "type": "string",
+              "description": "The LLM’s natural-language answer."
+            },
+            "result": {
+              "type": "object",
+              "description": "Parsed JSON conforming to outputJsonSchema (present only if outputJsonSchema was provided).",
+              "additionalProperties": true
+            }
+          },
+          "required": ["text"],
+          "additionalProperties": true
+        }
+      },
+      "required": ["output"]
     }
   },
   {
