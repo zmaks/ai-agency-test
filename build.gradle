@@ -49,7 +49,3 @@ kotlin {
 tasks.test {
     useJUnitPlatform()
 }
-
-bootBuildImage {
-    name = "ai-workflow"
-}

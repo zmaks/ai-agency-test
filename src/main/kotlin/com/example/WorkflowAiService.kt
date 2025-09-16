@@ -47,6 +47,7 @@ When modifying workflows:
 
     private val workflowExample = Resources.read("workflow.json")
     private val nodes = Resources.read("nodes.json")
+    private val actions = Resources.read("actions.json")
 
     fun generate(request: WorkflowRequest): WorkflowResponse {
         val prompt = request.prompt
@@ -56,11 +57,18 @@ When modifying workflows:
         val client = chatClientBuilder.build()
 
         val systemPrelude = buildString {
+            // System prompt
             append(defaultSystemPrompt)
             append("\n\n")
+            // Nodes
             append("Available node types:\n")
             append(nodes)
             append("\n\n")
+            // Actions
+            append("Available actions:\n")
+            append(actions)
+            append("\n\n")
+            // Existing or example
             if (workflow?.isNotBlank() == true) {
                 append("Existing workflow:\n")
                 append(workflow)

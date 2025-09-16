@@ -1,15 +1,8 @@
 package com.example
 
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import org.springframework.ai.chat.client.ChatClient
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.context.TestConfiguration
-import org.springframework.context.annotation.Bean
 import org.springframework.beans.factory.annotation.Autowired
-import java.lang.reflect.InvocationHandler
-import java.lang.reflect.Method
-import java.lang.reflect.Proxy
+import org.springframework.boot.test.context.SpringBootTest
 import kotlin.test.assertTrue
 
 @SpringBootTest
