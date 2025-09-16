@@ -1,0 +1,31 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version '2.1.21'
+}
+
+group = 'com.jetbrains.youtrack'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // https://mvnrepository.com/artifact/io.modelcontextprotocol.sdk/mcp
+    implementation("io.modelcontextprotocol.sdk:mcp:0.12.1")
+    implementation("ai.koog:koog-agents:0.4.1")
+    implementation("io.github.a2asdk:a2a-java-sdk-client:0.3.0.Alpha1")
+    implementation("io.github.a2asdk:a2a-java-sdk-client-transport-jsonrpc:0.3.0.Alpha1")
+    implementation("io.github.a2asdk:a2a-java-sdk-reference-jsonrpc:0.3.0.Alpha1")
+
+    // SLF4J backend for KotlinLogging -> logs to stdout via Logback's ConsoleAppender by default
+    implementation("ch.qos.logback:logback-classic:1.5.8")
+
+    testImplementation 'org.jetbrains.kotlin:kotlin-test'
+}
+
+test {
+    useJUnitPlatform()
+}
+kotlin {
+    jvmToolchain(21)
+}
