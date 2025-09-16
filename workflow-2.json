@@ -19,7 +19,7 @@
       "type": "js",
       "name": "Pick IDs",
       "description": "Extracts issueId and attachmentId from the trigger event.",
-      "params": {
+      "input": {
         "code": "const e=inputs.data||{}; return { issueId:e.issueId, attachmentId:e.attachmentId };"
       },
       "next": [
@@ -35,7 +35,7 @@
       "name": "YouTrack: GetAttachment",
       "description": "Downloads the attachment and returns blobRef, mimeType, filename.",
       "actionId": "get_attachment",
-      "params": {
+      "input": {
         "issueId": "#pick_ids.output.issueId",
         "attachmentId": "#pick_ids.output.attachmentId"
       },
@@ -52,7 +52,7 @@
       "type": "llm.extract",
       "name": "LLM Extract Mentions",
       "description": "Consumes file (auto PDF→text), extracts YouTrack issue keys into `object.mentions`.",
-      "params": {
+      "input": {
         "instructions": "Extract YouTrack issue keys like ABC-123. Return strict JSON per schema.",
         "outputJsonSchema": {
           "type": "object",
@@ -75,7 +75,7 @@
       "type": "js",
       "name": "Has Mentions?",
       "description": "Normalizes to uppercase, dedupes, and sets boolean `ok`.",
-      "params": {
+      "input": {
         "code": "const m=(args.mentions||[]).map(s=>String(s).toUpperCase()); const uniq=[...new Set(m)]; return { ok: uniq.length>0, mentions: uniq };",
         "args": "#mentions_extract.result"
       },
@@ -97,7 +97,7 @@
       "type": "template",
       "name": "Build Comment Text",
       "description": "Creates a comment like: “Found issue mentions in attachment: ...",
-      "params": { 
+      "input": { 
         "template": "Found issue mentions in attachment: {{input.mentions.join(', ')}}",
         "args": ""
       },
@@ -114,7 +114,7 @@
       "name": "YouTrack: AddComment",
       "description": "Posts the generated comment to the issue.",
       "actionId": "add_comment",
-      "params": {
+      "input": {
         "issueId": "#attachment_added.output.issueId",
         "text": "#comment_text.output"
       }
