@@ -1,0 +1,938 @@
+[
+  {
+    "id": "youtrack.add_issue_comment",
+    "title": "Add Issue Comment",
+    "description": "Adds a new comment to the specified issue. Supports Markdown.",
+    "arguments": {
+      "type": "object",
+      "properties": {
+        "issueId": {
+          "type": "string",
+          "description": "Id or readable id of the issue."
+        },
+        "text": {
+          "type": "string",
+          "description": "Comment body in plain text or markdown."
+        }
+      },
+      "required": [
+        "issueId",
+        "text"
+      ]
+    },
+    "returns": null
+  },
+  {
+    "id": "youtrack.change_issue_assignee",
+    "title": "Change Issue Assignee",
+    "description": "Sets the Assignee of an issue to the specified user.",
+    "arguments": {
+      "type": "object",
+      "properties": {
+        "issueId": {
+          "type": "string",
+          "description": "Id or readable id of the issue."
+        },
+        "assigneeLogin": {
+          "type": "string",
+          "description": "Login name of the new assignee."
+        }
+      },
+      "required": [
+        "issueId",
+        "assigneeLogin"
+      ]
+    },
+    "returns": null
+  },
+  {
+    "id": "youtrack.create_draft_issue",
+    "title": "Create Draft Issue",
+    "description": "Creates a new draft issue in the specified project. Draft issues visible only for the current user and can be edited using update_issue. Returns the created issue ID and URL to open in browser.",
+    "arguments": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "string",
+          "description": "Project key or ID where the issue will be created (e.g., DEMO)."
+        },
+        "summary": {
+          "type": "string",
+          "description": "Sets issue summary (title)."
+        }
+      },
+      "required": [
+        "project",
+        "summary"
+      ]
+    },
+    "returns": {
+      "description": "Created draft issue identifier and URL to open in browser.",
+      "type": "object",
+      "properties": {
+        "issueId": {
+          "type": "string",
+          "description": "Draft issue ID (e.g., 3-42)"
+        },
+        "url": {
+          "type": "string",
+          "description": "Direct link to open the draft in the browser"
+        }
+      }
+    }
+  },
+  {
+    "id": "youtrack.create_issue",
+    "title": "Create Issue",
+    "description": "Creates a new issue in the specified project. Use get_issue_fields_schema to discover `customFields` and their possible values for the project. Important: some of the custom fields might be required to create an issue. Returns the created issue ID and URL. Use get_issue to get the full issue details.",
+    "arguments": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "string",
+          "description": "Project key or ID where the issue will be created (e.g., DEMO)."
+        },
+        "summary": {
+          "type": "string",
+          "description": "Sets issue summary (title)."
+        },
+        "description": {
+          "type": "string",
+          "description": "Sets description in plain text or markdown."
+        },
+        "customFields": {
+          "type": "object",
+          "description": "Subset issue custom fields (key-value) to set. Pass the fields and their values that you want to set. Example: {\"Type\": \"Task\", \"Priority\": \"Minor\"}"
+        },
+        "parentIssue": {
+          "type": "string",
+          "description": "Optional parent issue id or readable id. The new issue will be a subtask of the specified parent issue. Use only if the new issue is explicitly requested to be a subtask."
+        }
+      },
+      "required": [
+        "project",
+        "summary"
+      ]
+    },
+    "returns": {
+      "description": "Result of creating an issue: created issue reference, optional parent reference, and outcome of applying custom fields.",
+      "type": "object",
+      "properties": {
+        "createdIssue": {
+          "type": "object",
+          "description": "The created issue reference.",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Issue readable ID (e.g., DEMO-123)"
+            },
+            "url": {
+              "type": "string",
+              "description": "Direct link to the created issue"
+            }
+          }
+        },
+        "parentIssue": {
+          "type": "object",
+          "description": "Parent issue reference if the new issue was created as a subtask.",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Parent issue readable ID"
+            },
+            "url": {
+              "type": "string",
+              "description": "Direct link to the parent issue"
+            }
+          }
+        },
+        "errors": {
+          "type": "array",
+          "description": "Errors encountered while applying custom fields (validation/permissions).",
+          "items": {
+            "type": "string"
+          }
+        },
+        "updatedFields": {
+          "type": "array",
+          "description": "Issue fields that were successfully updated.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "failedToUpdateFields": {
+          "type": "array",
+          "description": "Requested fields that were not updated.",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "youtrack.find_projects",
+    "title": "Find Projects",
+    "description": "Finds projects whose names contain the specified substring (case-insensitive). Returns minimal info (key and name) to help pick a project for get_project. Response is paginated via offset and limit.",
+    "arguments": {
+      "type": "object",
+      "properties": {
+        "nameContains": {
+          "type": "string",
+          "description": "Substring to match in the project name (case-insensitive). Use empty string to list all projects."
+        },
+        "offset": {
+          "type": "integer",
+          "description": "Number of items to skip.",
+          "default": 0
+        },
+        "limit": {
+          "type": "integer",
+          "description": "Maximum number of items to return.",
+          "default": 20,
+          "maximum": 20
+        }
+      },
+      "required": [
+        "nameContains"
+      ]
+    },
+    "returns": {
+      "description": "List of matching projects with minimal info to help select a project.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "description": "A single project entry.",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Project key, e.g., DEMO"
+          },
+          "name": {
+            "type": "string",
+            "description": "Project name"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "youtrack.find_user",
+    "title": "Find User",
+    "description": "Finds user by login or email (provide either login or email). Returns the user profile information: login, name, email, time zone.",
+    "arguments": {
+      "type": "object",
+      "properties": {
+        "loginOrEmail": {
+          "type": "string",
+          "description": "User login or email. When `me`, returns the currently authenticated user."
+        }
+      },
+      "required": [
+        "loginOrEmail"
+      ]
+    },
+    "returns": {
+      "type": "object",
+      "properties": {
+        "login": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "timeZone": {
+          "type": "string",
+          "description": "User time zone selected in the profile settings (e.g. Europe/Berlin)"
+        }
+      }
+    }
+  },
+  {
+    "id": "youtrack.find_user_groups",
+    "title": "Find User Groups",
+    "description": "Finds user groups or project teams whose names contain the specified substring (case-insensitive). Response is paginated via offset and limit.",
+    "arguments": {
+      "type": "object",
+      "properties": {
+        "nameContains": {
+          "type": "string",
+          "description": "Substring to match in the project name (case-insensitive). Use empty string to list all group/teams."
+        },
+        "offset": {
+          "type": "integer",
+          "description": "Number of members to skip.",
+          "default": 0
+        },
+        "limit": {
+          "type": "integer",
+          "description": "Maximum members to return.",
+          "default": 20,
+          "maximum": 20
+        }
+      },
+      "required": [
+        "nameContains"
+      ]
+    },
+    "returns": {
+      "description": "List of user groups or project teams matching the query.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Group or team name"
+          },
+          "membersCount": {
+            "type": "integer",
+            "description": "The number of users in the group/team"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "youtrack.get_current_user",
+    "title": "Get Current User",
+    "description": "Returns details about the currently authenticated user (me): login, email, name, time zone.",
+    "arguments": {
+      "type": "object",
+      "properties": {}
+    },
+    "returns": {
+      "description": "Details about the currently authenticated user (me).",
+      "type": "object",
+      "properties": {
+        "login": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "timeZoneId": {
+          "type": "string",
+          "description": "Time zone identifier, e.g., Europe/Berlin"
+        }
+      }
+    }
+  },
+  {
+    "id": "youtrack.get_issue",
+    "title": "Get Issue",
+    "description": "Returns issue or draft issue details like summary (title), description, url, project, reporter (login), tags, votes and custom fields. The `customFields` output property provides important issue details: Type, State, Assignee, Priority, Subsystem, etc. Use get_issue_fields_schema for the full relevant list of custom fields and their possible values.",
+    "arguments": {
+      "type": "object",
+      "properties": {
+        "issueId": {
+          "type": "string",
+          "description": "Issue or draft issue ID, e.g. PROJ-123, 3-42."
+        }
+      },
+      "required": [
+        "issueId"
+      ]
+    },
+    "returns": {
+      "description": "Issue or draft issue details with key metadata and visible custom fields.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Issue ID or draft ID"
+        },
+        "isDraft": {
+          "type": "boolean",
+          "description": "True if this is a draft issue"
+        },
+        "url": {
+          "type": "string",
+          "description": "Direct link to the issue"
+        },
+        "project": {
+          "type": "string",
+          "description": "Project key"
+        },
+        "summary": {
+          "type": "string",
+          "description": "Issue summary (title)"
+        },
+        "description": {
+          "type": "string",
+          "description": "Issue description"
+        },
+        "reporter": {
+          "type": "string",
+          "description": "Login of the issue reporter"
+        },
+        "parentIssue": {
+          "type": "object",
+          "description": "Parent issue info if the issue is a subtask, otherwise null",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Parent issue ID"
+            },
+            "summary": {
+              "type": "string",
+              "description": "Parent issue summary"
+            }
+          }
+        },
+        "votes": {
+          "type": "integer",
+          "description": "Number of votes"
+        },
+        "votedByMe": {
+          "type": "boolean",
+          "description": "Whether the current user voted for the issue"
+        },
+        "subscribedByMe": {
+          "type": "boolean",
+          "description": "Whether the current user is watching the issue"
+        },
+        "resolvedAt": {
+          "type": "string",
+          "description": "yyyy-MM-dd HH:mm:ss or null if not resolved"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "yyyy-MM-dd HH:mm:ss"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "yyyy-MM-dd HH:mm:ss"
+        },
+        "lastUpdatedBy": {
+          "type": "string",
+          "description": "Login of the last updater"
+        },
+        "commentsCount": {
+          "type": "integer",
+          "description": "Number of comments"
+        },
+        "workItemsCount": {
+          "type": "integer",
+          "description": "Number of work items (time tracking)"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of tag names or null if there are no tags"
+        },
+        "linkedIssueCounts": {
+          "type": "object",
+          "description": "Map of link type to number of linked issues. Use search_issues to retrieve the linked issues.",
+          "additionalProperties": {
+            "type": "integer"
+          }
+        },
+        "attachments": {
+          "type": "array",
+          "description": "List of attachments added to the issue",
+          "items": {
+            "type": "object",
+            "description": "A single attachment.",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Attachment file name"
+              },
+              "mimeType": {
+                "type": "string",
+                "description": "MIME type"
+              },
+              "sizeBytes": {
+                "type": "integer",
+                "description": "File size in bytes"
+              },
+              "url": {
+                "type": "string",
+                "description": "Download URL"
+              }
+            }
+          }
+        },
+        "customFields": {
+          "type": "object",
+          "description": "Map of visible custom fields to their human-readable values",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "youtrack.get_issue_comments",
+    "title": "Get Issue Comments",
+    "description": "Returns the list of issue comments with the full content. Response is paginated via offset and limit.",
+    "arguments": {
+      "type": "object",
+      "properties": {
+        "issueId": {
+          "type": "string",
+          "description": "Issue ID, e.g. PROJ-123."
+        },
+        "offset": {
+          "type": "integer",
+          "description": "Number of comments to skip.",
+          "default": 0
+        },
+        "limit": {
+          "type": "integer",
+          "description": "Maximum number of comments to return.",
+          "default": 10,
+          "maximum": 10
+        }
+      },
+      "required": [
+        "issueId"
+      ]
+    },
+    "returns": {
+      "description": "List of comments for the specified issue",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "description": "A single comment entry.",
+        "properties": {
+          "author": {
+            "type": "string",
+            "description": "Comment author login"
+          },
+          "text": {
+            "type": "string",
+            "description": "Full comment text"
+          },
+          "url": {
+            "type": "string",
+            "description": "Direct link to the comment"
+          },
+          "isPinned": {
+            "type": "boolean",
+            "description": "Whether the comment is pinned"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Creation timestamp"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Last update timestamp"
+          },
+          "attachments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "description": "A single attachment.",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Attachment file name"
+                },
+                "mimeType": {
+                  "type": "string",
+                  "description": "MIME type"
+                },
+                "sizeBytes": {
+                  "type": "integer",
+                  "description": "File size in bytes"
+                },
+                "url": {
+                  "type": "string",
+                  "description": "Download URL"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "youtrack.get_issue_fields_schema",
+    "title": "Get Issue Fields Schema",
+    "description": "Returns issue fields JSON schema for the specified project. Must be used to provide relevant custom fields and values create_issue and update_issue actions.",
+    "arguments": {
+      "type": "object",
+      "properties": {
+        "projectKey": {
+          "type": "string",
+          "description": "The project key (e.g. DEMO)."
+        }
+      },
+      "required": [
+        "projectKey"
+      ]
+    },
+    "returns": {
+      "description": "JSON Schema describing available issue fields and constraints for the specified project.",
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Top-level JSON Schema type. Always 'object'"
+        },
+        "properties": {
+          "type": "object",
+          "description": "Map of issue field name to its JSON Schema definition",
+          "additionalProperties": {
+            "type": "object"
+          }
+        },
+        "required": {
+          "type": "array",
+          "description": "List of required issue fields",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "youtrack.get_project",
+    "title": "Get Project",
+    "description": "Retrieves full details for a specific project.",
+    "arguments": {
+      "type": "object",
+      "properties": {
+        "projectKey": {
+          "type": "string",
+          "description": "The project key (e.g. DEMO)."
+        }
+      },
+      "required": [
+        "projectKey"
+      ]
+    },
+    "returns": {
+      "description": "Detailed information about the requested project.",
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string",
+          "description": "Project key, e.g., DEMO"
+        },
+        "name": {
+          "type": "string",
+          "description": "Project name"
+        },
+        "isArchived": {
+          "type": "boolean",
+          "description": "Whether the project is archived"
+        },
+        "leader": {
+          "type": "string",
+          "description": "Login of the project leader"
+        },
+        "teamUserGroup": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "description": "Project team group information.",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Team group name"
+                },
+                "usersCount": {
+                  "type": "integer",
+                  "description": "Number of users in the team group"
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "youtrack.get_saved_issue_searches",
+    "title": "Get Saved Issue Searches",
+    "description": "Returns saved issue searches marked as favorite by the current user. The output search queries can be used in search_issues. Response is paginated via offset and limit.",
+    "arguments": {
+      "type": "object",
+      "properties": {
+        "offset": {
+          "type": "integer",
+          "description": "Number of searches to skip.",
+          "default": 0
+        },
+        "limit": {
+          "type": "integer",
+          "description": "Maximum number of searches to return.",
+          "default": 20,
+          "maximum": 20
+        }
+      }
+    },
+    "returns": {
+      "description": "List of favorite saved searches for the current user.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "description": "A single saved search entry.",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Saved search name"
+          },
+          "query": {
+            "type": "string",
+            "description": "YouTrack search query"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "youtrack.get_user_group_members",
+    "title": "Get User Group Members",
+    "description": "Lists members of a given user group or project team (Project team is a subtype of User Group). Response is paginated via offset and limit.",
+    "arguments": {
+      "type": "object",
+      "properties": {
+        "group": {
+          "type": "string",
+          "description": "Name of the group or project team."
+        },
+        "offset": {
+          "type": "integer",
+          "description": "Number of members to skip.",
+          "default": 0
+        },
+        "limit": {
+          "type": "integer",
+          "description": "Maximum members to return.",
+          "default": 20,
+          "maximum": 20
+        }
+      },
+      "required": [
+        "group"
+      ]
+    },
+    "returns": {
+      "description": "List of users who are members of the specified group or project team.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "description": "A single group member entry.",
+        "properties": {
+          "login": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "youtrack.link_issues",
+    "title": "Link Issues",
+    "description": "Links two issues with specified link type.\n  Examples:\n  - TS-1 is a subtask of TS-2: {\"targetIssueId\": \"TS-1\", \"linkType\": \"subtask of\", \"issueToLinkId\": \"TS-2\"};\n  - TS-4 is a duplicate of TS-3: {\"targetIssueId\": \"TS-4\", \"linkType\": \"duplicates\", \"issueToLinkId\": \"TS-3\"};\n  - TS-1 is blocked by TS-2: {\"targetIssueId\": \"TS-1\", \"linkType\": \"blocked by\", \"issueToLinkId\": \"TS-2\"};\n  Returns updated link counts for all target issue link types.\n  ",
+    "arguments": {
+      "type": "object",
+      "properties": {
+        "targetIssueId": {
+          "type": "string",
+          "description": "Target issue ID (e.g. PROJ-123)."
+        },
+        "linkType": {
+          "type": "string",
+          "description": "Link type. For example: \"relates to\", \"subtask of\", \"depends on\", \"duplicates\", \"blocked by\"."
+        },
+        "issueToLinkId": {
+          "type": "string",
+          "description": "Linking issue ID (e.g. PROJ-42)."
+        }
+      },
+      "required": [
+        "targetIssueId",
+        "linkType",
+        "issueToLinkId"
+      ]
+    },
+    "returns": {
+      "description": "Confirmation of linking result with updated link counts for the target issue.",
+      "type": "object",
+      "properties": {
+        "issueId": {
+          "type": "string",
+          "description": "Target issue ID."
+        },
+        "linkedIssueCounts": {
+          "type": "object",
+          "description": "Map of link type to number of linked issues after the operation.",
+          "additionalProperties": {
+            "type": "integer"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "youtrack.manage_issue_tags",
+    "title": "Manage Issue Tags",
+    "description": "Adds or removes a tag from an issue. If a name is passed, adds the first matching tag by name. If tag not found, the returns error message with similar tags suggestions. Returns the issue ID and updated list of issue tags.",
+    "arguments": {
+      "type": "object",
+      "properties": {
+        "issueId": {
+          "type": "string",
+          "description": "Id or readable id of the issue."
+        },
+        "tag": {
+          "type": "string",
+          "description": "Id (preferable) or name of the tag to add."
+        },
+        "operation": {
+          "type": "string",
+          "description": "Operation to perform: add or remove.",
+          "enum": [
+            "add",
+            "remove"
+          ]
+        }
+      },
+      "required": [
+        "issueId",
+        "tag",
+        "operation"
+      ]
+    },
+    "returns": null
+  },
+  {
+    "id": "youtrack.update_issue",
+    "title": "Update Issue",
+    "description": "Updates an existing issue and its fields (customFields). Pass any of the arguments to partially update the issue:\n- 'summary' or 'description' arguments to update only the issue summary or description.\n- 'customFields' argument as key-value JSON object to update issue fields like State, Type, Priority, etc. Use get_issue_fields_schema to discover 'customFields' and their possible values.\n- 'parentIssue' argument to link current issue (issueId) as a subtask. Use only if the issue is explicitly requested to be a subtask.\n- 'relatedIssue' argument to link current issue (issueId) as a related issue. Use only if the issue is explicitly requested to be a related issue.\n- 'subscription' argument to subscribe (true) or unsubscribe (false) the current user from the issue updates. If subscribed, the user receives notification about the issue updates.\n- 'vote' argument to vote (true) or unvote (false) the current user for the issue. If voted, the user receives notification about the issue updates.\nReturns updated issue ID and the confirmation what was updated.",
+    "arguments": {
+      "type": "object",
+      "properties": {
+        "issueId": {
+          "type": "string",
+          "description": "Issue or draft issue ID, e.g. PROJ-123, 3-42."
+        },
+        "summary": {
+          "type": "string",
+          "description": "New summary. When undefined, existing summary stays as is."
+        },
+        "description": {
+          "type": "string",
+          "description": "New description. When undefined, existing description stays as is."
+        },
+        "customFields": {
+          "type": "object",
+          "description": "Subset of issue custom fields to update. Pass only those fields and values that should updated, all the other existing issue fields will be left unchanged. Example: {\"Type\": \"Task\", \"Priority\": \"Minor\"}"
+        },
+        "parentIssue": {
+          "type": "string",
+          "description": "Optional parent issue id."
+        },
+        "relatedIssue": {
+          "type": "string",
+          "description": "Optional related issue id."
+        },
+        "subscription": {
+          "type": "boolean",
+          "description": "Optional subscription flag."
+        },
+        "vote": {
+          "type": "boolean",
+          "description": "Optional vote flag."
+        }
+      },
+      "required": [
+        "issueId"
+      ]
+    },
+    "returns": null
+  },
+  {
+    "id": "youtrack.search_issues",
+    "title": "Search Issues",
+    "description": "Searches issues using YouTrack’s query language. The 'query' can combine attribute filters, keywords and free text. Examples of common patterns:\n\n- Free text: Just type words to search in summary, description and comments. Use wildcards: '*' for any characters, '?' for single character (e.g., 'summary: log*', 'fix??'). Examples: 'login button bug', 'some other text', 'summary: log*', 'description: fix??'.\n- Linked issues: '<linkType>: <issueId>'. Examples: 'relates to: DEMO-123', 'subtask of: DEMO-123' (issues where DEMO-123 is a parent). Hint: get_issue returns 'linkedIssueCounts' property which shows the available link types for the issue.\n- Mentioned it issues: 'mentions: <issueId>'. Examples: 'mentions: DEMO-123'.\n- Project filter: 'project: <ProjectName>'. Use project name or project key. Examples: 'project: {Mobile App}', 'project: MA'.\n- Assignee filter: 'for: <login>'. Use 'me' for the currently authenticated user. Examples: 'for: me', 'for: john.smith'.\n- Reporter filter: 'reporter: <username>'. Use 'me' for the currently authenticated user. Examples: 'reporter: me', 'reporter: admin'.\n- Tag filter: 'tag: <TagName>'. Wrap multi-word tags in braces { }. Examples: 'tag: urgent', 'tag: {customer feedback}'.\n- Field filter: '<FieldName>: <Value>'. For any project field, e.g., State, Type, Priority, etc. Wrap multi-word names or values in { }. Use get_project to get the possible fields and values for the project issues to search. Use '-' as 'not', e.g., 'State: -Fixed' filters out fixed issues. Examples: 'Priority: High', 'State: {In Progress}, Fixed' (searches issues with 'In Progress' state + issues with 'Fixed' state), 'Due Date: {plus 5d}' (issues that are due in five days).\n- Date filters: 'created:', 'updated:', 'resolved date:' (or any date field) plus a date, range, or relative period. Relative periods: 'today', 'yesterday', '{This week}', '{Last week}', '{This month}', etc. Examples: 'created: {This month}', 'updated: today', 'resolved date: 2025-06-01 .. 2025-06-30', 'updated: {minus 2h} .. *' (issues updated last 2 hours), 'created: * .. {minus 1y 6M}' (issues that are at least one and a half years old).\n- Keywords: '#Unresolved' to find unresolved issues based on the State; '#Resolved' to find resolved/finished issues.\n- Combining filters: List multiple conditions separated by spaces (logical AND). For OR operator, add it explicitly. Examples: '(project: MA) and (for: me) and (created: {minus 8h} .. *) and runtime error' (issues in project MA and assigned to currently authenticated user and created during last 8h and contains 'runtime error' text), '(Type: Task and State: Open) or (Type: Bug and Priority: Critical)'.\n\nReturns basic info: id, summary, project, resolved, reporter, created, updated. For full details, use get_issue. Response is paginated via offset and limit.",
+    "arguments": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "Search query in YouTrack syntax."
+        },
+        "offset": {
+          "type": "integer",
+          "description": "Number of issues to skip.",
+          "default": 0
+        },
+        "limit": {
+          "type": "integer",
+          "description": "Maximum number of issues to return.",
+          "default": 20,
+          "maximum": 20
+        }
+      },
+      "required": [
+        "query"
+      ]
+    },
+    "returns": {
+      "description": "List of issues that match the given YouTrack search query (basic fields).",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "description": "A single search result entry (issue).",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Issue readable ID (e.g., DEMO-123)"
+          },
+          "url": {
+            "type": "string",
+            "description": "Direct link to the issue"
+          },
+          "summary": {
+            "type": "string",
+            "description": "Issue summary (title)"
+          },
+          "project": {
+            "type": "string",
+            "description": "Project key the issue belongs to"
+          },
+          "reporter": {
+            "type": "string",
+            "description": "Login of the issue reporter (if visible)"
+          },
+          "resolvedAt": {
+            "type": "string",
+            "description": "yyyy-MM-dd HH:mm:ss or null if not resolved"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Creation timestamp in yyyy-MM-dd HH:mm:ss"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Last update timestamp in yyyy-MM-dd HH:mm:ss"
+          }
+        }
+      }
+    }
+  }
+]
