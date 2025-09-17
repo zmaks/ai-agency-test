@@ -18,7 +18,7 @@
       "id": "get_attachment",
       "type": "action",
       "name": "YouTrack: Get Attachment",
-      "description": "Downloads the attachment and returns base64 blobRef, mimeType and filename for the extractor.",
+      "description": "Downloads the attachment and returns base64Content, mimeType and filename for the extractor.",
       "input": {
         "actionId": "get_attachment",
         "provider": "youtrack",
@@ -57,7 +57,7 @@
         },
         "mimeType": "#get_attachment.output.mimeType",
         "base64Content": "#get_attachment.output.base64Content",
-        "filename": "#get_attachment.output.filename"
+        "filename": "#get_attachment.output.name"
       },
       "next": [
         {
@@ -110,10 +110,10 @@
       "name": "YouTrack: Add Issue Comment",
       "description": "Adds a comment to the original issue with the list of extracted issue IDs.",
       "input": {
-        "actionId": "youtrack.add_issue_comment",
+        "actionId": "add_issue_comment",
         "provider": "youtrack",
         "actionInput": {
-          "issueId": "#attachment_added.output.event.issueId",
+          "issueId": "#attachment_added.output.issueId",
           "text": "#comment_text.output"
         }
       }
