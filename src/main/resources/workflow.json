@@ -63,8 +63,8 @@
           "required": ["mentions"]
         },
         "mimeType": "#get_attachment.output.mimeType",
-        "base64content": "#get_attachment.output.blobRef",
-        "filename": "#get_attachment.output.filename"
+        "base64content": "#get_attachment.output.base64content",
+        "filename": "#get_attachment.output.name"
       },
       "next": [
         {
