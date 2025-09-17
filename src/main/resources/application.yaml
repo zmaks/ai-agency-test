@@ -5,9 +5,9 @@ spring:
       api-key: ${OPENAI_API_KEY}
       chat:
         options:
-          #model: gpt-4o-mini
           temperature: 1
           model: gpt-5-mini
+          reasoning-effort: "low"
   main:
     banner-mode: off
 server:
