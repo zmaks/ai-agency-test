@@ -1,76 +1,90 @@
 {
-  "name": "PDF Mentions → Comment",
-  "version": "poc-2",
+  "name": "PDF Attachment → Extracted Issue Comments",
+  "version": "poc",
   "nodes": [
     {
       "id": "attachment_added",
       "type": "trigger",
-      "name": "Event Trigger",
-      "description": "Receives YouTrack 'attachment added' event and exposes it as `event`.",
+      "name": "YouTrack: Attachment Added",
+      "description": "Triggered when an attachment is added to a YouTrack issue. Exposes event payload as `event`.",
       "next": [
         {
           "nextNodeId": "get_attachment",
-          "relationDescription": "Produces event consumed by Pick IDs."
+          "relationDescription": "Passes event to pick IDs node."
         }
       ]
     },
     {
       "id": "get_attachment",
       "type": "action",
-      "name": "YouTrack: GetAttachment",
-      "description": "Downloads the attachment and returns blobRef, mimeType, filename.",
+      "name": "YouTrack: Get Attachment",
+      "description": "Downloads the attachment and returns base64Content, mimeType and filename for the extractor.",
       "input": {
         "actionId": "get_attachment",
         "provider": "youtrack",
         "actionInput": {
-          "issueId": "#get_attachment.output.issueId",
-          "attachmentName": "#get_attachment.output.attachmentName"
+          "issueId": "#attachment_added.output.issueId",
+          "attachmentName": "#attachment_added.output.attachmentName"
         }
       },
       "next": [
         {
           "nextNodeId": "mentions_extract",
-          "relationDescription": "Provides the downloaded file to LLM Extract Mentions."
+          "relationDescription": "Sends downloaded file to LLM Extract."
         }
       ]
     },
     {
       "id": "mentions_extract",
       "type": "llm.extract",
-      "name": "LLM Extract Mentions",
-      "description": "Consumes file (auto PDF→text), extracts YouTrack issue keys into result.mentions.",
+      "name": "LLM Extract: Find Issue IDs",
+      "description": "Auto-converts PDF to text (if needed) and extracts YouTrack issue IDs (e.g., PROJ-123). Returns array result.mentions.",
       "input": {
-        "instructions": "Extract YouTrack issue keys like ABC-123. Return strict JSON per schema.",
+        "instructions": "Given the text of the attached file, extract all YouTrack issue keys in the canonical form (letters, dash, digits), e.g., ABC-123. Return strict JSON with property `mentions` which is an array of unique issue ids as strings. Do not include any other text.",
         "outputJsonSchema": {
           "type": "object",
-          "properties": { "mentions": { "type": "array", "items": { "type": "string" } } },
-          "required": ["mentions"]
+          "properties": {
+            "mentions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "mentions"
+          ]
         },
         "mimeType": "#get_attachment.output.mimeType",
-        "base64content": "#get_attachment.output.base64Content",
+        "base64Content": "#get_attachment.output.base64Content",
         "filename": "#get_attachment.output.name"
       },
       "next": [
         {
           "nextNodeId": "has_mentions",
-          "relationDescription": "Sends extracted mentions to Has Mentions?"
+          "relationDescription": "Sends extraction results to the filter."
         }
       ]
     },
     {
       "id": "has_mentions",
       "type": "js",
-      "name": "Has Mentions?",
-      "description": "Normalizes to uppercase, dedupes, and sets boolean `ok`.",
+      "name": "Normalize & Check Mentions",
+      "description": "Normalizes extracted issue ids to uppercase, deduplicates and sets boolean `ok` if any mentions found.",
       "input": {
-        "code": "const m=(args.mentions||[]).map(s=>String(s).toUpperCase()); const uniq=[...new Set(m)]; return { ok: uniq.length>0, mentions: uniq, mentionsCsv: uniq.join(', ') };",
+        "code": "const extracted=(args.mentions|| (args.result && args.result.mentions) || []); const normalized=extracted.map(s=>String(s).toUpperCase().trim()).filter(Boolean); const uniq=[...new Set(normalized)]; return { ok: uniq.length>0, mentions: uniq, mentionsCsv: uniq.join(', ') };",
         "args": "#mentions_extract.output"
       },
       "next": [
         {
           "nextNodeId": "comment_text",
-          "relationDescription": "Runs only when mentions exist.",
+          "relationDescription": "Continue when mentions exist.",
           "invokeCondition": "#this.output.ok == true"
+        },
+        {
+          "nextNodeId": "exit",
+          "relationDescription": "Stop when no mentions found.",
+          "invokeCondition": "#this.output.ok != true"
         }
       ]
     },
@@ -78,28 +92,28 @@
       "id": "comment_text",
       "type": "template",
       "name": "Build Comment Text",
-      "description": "Creates a comment like: ‘Found issue mentions in attachment: ...’.",
+      "description": "Renders the comment body listing the found issue IDs.",
       "input": {
-        "template": "Found issue mentions in attachment:\n #{args.mentionsCsv}",
+        "template": "Found the following issue references in the attached PDF: ${args.mentionsCsv}",
         "args": "#has_mentions.output"
       },
       "next": [
         {
           "nextNodeId": "add_comment",
-          "relationDescription": "Executes after comment text has been prepared."
+          "relationDescription": "Posts the prepared comment to the original issue."
         }
       ]
     },
     {
       "id": "add_comment",
       "type": "action",
-      "name": "YouTrack: AddComment",
-      "description": "Posts the generated comment to the issue.",
+      "name": "YouTrack: Add Issue Comment",
+      "description": "Adds a comment to the original issue with the list of extracted issue IDs.",
       "input": {
-        "actionId": "add_comment",
+        "actionId": "add_issue_comment",
         "provider": "youtrack",
         "actionInput": {
-          "issueId": "#attachment_added.output.event.issueId",
+          "issueId": "#attachment_added.output.issueId",
           "text": "#comment_text.output"
         }
       }
