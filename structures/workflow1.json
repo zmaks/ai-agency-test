@@ -117,15 +117,6 @@
           "text": "#comment_text.output"
         }
       }
-    },
-    {
-      "id": "exit",
-      "type": "js",
-      "name": "Exit (No Mentions)",
-      "description": "Terminates the flow when no issue IDs were found in the attachment.",
-      "input": {
-        "code": "return { message: 'No issue IDs found in attachment.' };"
-      }
     }
   ]
 }
