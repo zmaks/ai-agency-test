@@ -1,7 +1,6 @@
 package com.example
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import org.springframework.ai.chat.client.ChatClient
 import org.springframework.stereotype.Service
 
