@@ -13,7 +13,7 @@ class WorkflowRuntimeFullFlowTest {
     fun `full run on example workflow without trigger executes all nodes including add_comment`() {
         // Load example workflow JSON from structures and parse
         val baseDir = Paths.get("").toAbsolutePath()
-        val path = baseDir.resolve("structures/workflow-example.json")
+        val path = baseDir.resolve("structures/workflow1.json")
         assertTrue(Files.exists(path), "Workflow example JSON should exist at: ${'$'}path")
         val json = Files.readString(path)
         val wf = WorkflowParser.parse(json)

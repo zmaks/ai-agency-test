@@ -1,0 +1,147 @@
+{
+  "name": "PDF Attachment → Extract Issue IDs → Comment",
+  "version": "1.0",
+  "nodes": [
+    {
+      "id": "attachment_added",
+      "type": "trigger",
+      "name": "YouTrack: Attachment Added",
+      "description": "Triggered when an attachment is added to a YouTrack issue. Exposes event payload as `event`.",
+      "next": [
+        {
+          "nextNodeId": "pick_ids",
+          "relationDescription": "Passes event to pick IDs node."
+        }
+      ]
+    },
+    {
+      "id": "pick_ids",
+      "type": "js",
+      "name": "Pick IDs",
+      "description": "Extracts issueId and attachmentId from the trigger event.",
+      "input": {
+        "code": "const ev=args.event||{}; const issueId=ev.issueId||ev.issue?.id||ev.issueId; const attachmentId=ev.attachmentId||ev.attachment?.id||ev.attachment?.id; return { issueId, attachmentId };",
+        "args": "#attachment_added.output.event"
+      },
+      "next": [
+        {
+          "nextNodeId": "get_attachment",
+          "relationDescription": "Provides IDs to download the attachment."
+        }
+      ]
+    },
+    {
+      "id": "get_attachment",
+      "type": "action",
+      "name": "YouTrack: Get Attachment",
+      "description": "Downloads the attachment and returns base64 blobRef, mimeType and filename for the extractor.",
+      "input": {
+        "actionId": "get_attachment",
+        "provider": "youtrack",
+        "actionInput": {
+          "issueId": "#pick_ids.output.issueId",
+          "attachmentId": "#pick_ids.output.attachmentId"
+        }
+      },
+      "next": [
+        {
+          "nextNodeId": "mentions_extract",
+          "relationDescription": "Sends downloaded file to LLM Extract."
+        }
+      ]
+    },
+    {
+      "id": "mentions_extract",
+      "type": "llm.extract",
+      "name": "LLM Extract: Find Issue IDs",
+      "description": "Auto-converts PDF to text (if needed) and extracts YouTrack issue IDs (e.g., PROJ-123). Returns array result.mentions.",
+      "input": {
+        "instructions": "Given the text of the attached file, extract all YouTrack issue keys in the canonical form (letters, dash, digits), e.g., ABC-123. Return strict JSON with property `mentions` which is an array of unique issue ids as strings. Do not include any other text.",
+        "outputJsonSchema": {
+          "type": "object",
+          "properties": {
+            "mentions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "mentions"
+          ]
+        },
+        "mimeType": "#get_attachment.output.mimeType",
+        "base64content": "#get_attachment.output.blobRef",
+        "filename": "#get_attachment.output.filename"
+      },
+      "next": [
+        {
+          "nextNodeId": "has_mentions",
+          "relationDescription": "Sends extraction results to the filter."
+        }
+      ]
+    },
+    {
+      "id": "has_mentions",
+      "type": "js",
+      "name": "Normalize & Check Mentions",
+      "description": "Normalizes extracted issue ids to uppercase, deduplicates and sets boolean `ok` if any mentions found.",
+      "input": {
+        "code": "const extracted=(args.mentions|| (args.result && args.result.mentions) || []); const normalized=extracted.map(s=>String(s).toUpperCase().trim()).filter(Boolean); const uniq=[...new Set(normalized)]; return { ok: uniq.length>0, mentions: uniq, mentionsCsv: uniq.join(', ') };",
+        "args": "#mentions_extract.output"
+      },
+      "next": [
+        {
+          "nextNodeId": "comment_text",
+          "relationDescription": "Continue when mentions exist.",
+          "invokeCondition": "#this.output.ok == true"
+        },
+        {
+          "nextNodeId": "exit",
+          "relationDescription": "Stop when no mentions found.",
+          "invokeCondition": "#this.output.ok != true"
+        }
+      ]
+    },
+    {
+      "id": "comment_text",
+      "type": "template",
+      "name": "Build Comment Text",
+      "description": "Renders the comment body listing the found issue IDs.",
+      "input": {
+        "template": "Found the following issue references in the attached PDF: {{args.mentionsCsv}}",
+        "args": "#has_mentions.output"
+      },
+      "next": [
+        {
+          "nextNodeId": "add_comment",
+          "relationDescription": "Posts the prepared comment to the original issue."
+        }
+      ]
+    },
+    {
+      "id": "add_comment",
+      "type": "action",
+      "name": "YouTrack: Add Issue Comment",
+      "description": "Adds a comment to the original issue with the list of extracted issue IDs.",
+      "input": {
+        "actionId": "youtrack.add_issue_comment",
+        "provider": "youtrack",
+        "actionInput": {
+          "issueId": "#attachment_added.output.event.issueId",
+          "text": "#comment_text.output"
+        }
+      }
+    },
+    {
+      "id": "exit",
+      "type": "js",
+      "name": "Exit (No Mentions)",
+      "description": "Terminates the flow when no issue IDs were found in the attachment.",
+      "input": {
+        "code": "return { message: 'No issue IDs found in attachment.' };"
+      }
+    }
+  ]
+}

@@ -16,9 +16,7 @@ class WorkflowAiServiceTest @Autowired constructor(
     fun `should generate new workflow`() {
         // Given
         val request = WorkflowRequest(
-            prompt = "Workflow to add a comment with all changes when issue changed",
-            workflow = null,
-            model = "test-model"
+            prompt = "Workflow to extract issue ids from attached pdf and add comment to the original issue with extracted issue IDs",
         )
 
         // When
