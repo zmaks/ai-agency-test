@@ -163,13 +163,12 @@
   {
     "type": "template",
     "name": "Template Render",
-    "description": "Renders a text template using args (Mustache-style or your chosen engine). Emits the rendered string as output.",
+    "description": "Renders a text template using args (JS-style). Template string example: 'Some text: ${args.someValue}'. Emits the rendered string as output.",
     "inputSchema": {
       "type": "object",
       "properties": {
         "template": { "type": "string", "description": "Template string." },
-        "args": { "description": "Arbitrary JSON context available to the template.", "nullable": true },
-        "engine": { "type": "string", "enum": ["mustache"], "default": "mustache" }
+        "args": { "description": "Arbitrary JSON context available to the template.", "nullable": true }
       },
       "required": ["template"]
     },

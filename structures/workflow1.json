@@ -110,7 +110,7 @@
       "name": "Build Comment Text",
       "description": "Renders the comment body listing the found issue IDs.",
       "input": {
-        "template": "Found the following issue references in the attached PDF: {{args.mentionsCsv}}",
+        "template": "Found the following issue references in the attached PDF: ${args.mentionsCsv}",
         "args": "#has_mentions.output"
       },
       "next": [

@@ -53,14 +53,6 @@ class LlmExtractExecutor : NodeExecutor {
             ?: return err(node, "llm.extract: missing 'outputJsonSchema'")
         val schema = mapper.writeValueAsString(schemaObj)
 
-        val textRaw = input["text"]
-        val text: String? = when (textRaw) {
-            is String -> if (textRaw.startsWith("#")) {
-                ExpressionEvaluator.evaluate(textRaw, ctx, node.id, ResultEnvelope(output = null))?.toString()
-            } else textRaw
-            else -> null
-        }
-
         val base64Raw = input["base64content"]
         val base64content: String? = when (base64Raw) {
             is String -> if (base64Raw.startsWith("#")) {

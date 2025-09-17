@@ -6,10 +6,9 @@
     "inputSchema": {
       "type": "object",
       "properties": {
-        "source": { "type": "string", "description": "Event source identifier, e.g. 'youtrack'." },
-        "triggerId": { "type": "string", "description": "Trigger ID, e.g. 'attachment_added'." }
+        "triggerId": { "type": "string" }
       },
-      "required": ["source", "triggerId"]
+      "required": ["triggerId"]
     },
     "outputSchema": {
       "type": "object",
@@ -92,13 +91,8 @@
           "description": "Base64-encoded content (e.g., file).",
           "contentEncoding": "base64"
         },
-        "filename": { "type": "string", "description": "Original filename (helps with heuristics/OCR)." },
-        "text": { "type": "string", "description": "Plain text to extract from (alternative to file)." }
+        "filename": { "type": "string", "description": "Original filename (helps with heuristics/OCR)." }
       },
-      "oneOf": [
-        { "required": ["text"] },
-        { "required": ["base64content"] }
-      ],
       "required": ["instructions", "outputJsonSchema"]
     },
     "outputSchema": {
@@ -161,13 +155,12 @@
   {
     "type": "template",
     "name": "Template Render",
-    "description": "Renders a text template using args (Mustache-style or your chosen engine). Emits the rendered string as output.",
+    "description": "Renders a text template using args (JS-style). Template string example: 'Some text: ${args.someValue}'. Emits the rendered string as output.",
     "inputSchema": {
       "type": "object",
       "properties": {
         "template": { "type": "string", "description": "Template string." },
-        "args": { "description": "Arbitrary JSON context available to the template.", "nullable": true },
-        "engine": { "type": "string", "enum": ["mustache"], "default": "mustache" }
+        "args": { "description": "Arbitrary JSON context available to the template.", "nullable": true }
       },
       "required": ["template"]
     },
