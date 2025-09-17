@@ -40,7 +40,7 @@
         "provider": "youtrack",
         "actionInput": {
           "issueId": "#pick_ids.output.issueId",
-          "attachmentId": "#pick_ids.output.attachmentId"
+          "attachmentName": "#pick_ids.output.attachmentName"
         }
       },
       "next": [
