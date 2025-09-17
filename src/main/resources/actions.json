@@ -24,6 +24,46 @@
     "outputSchema": null
   },
   {
+    "id": "get_attachment",
+    "provider": "youtrack",
+    "name": "Get Attachment Data",
+    "description": "Returns issue attachment data including base64 content and mimeType",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "issueId": {
+          "type": "string",
+          "description": "Id or readable id of the issue."
+        },
+        "attachmentName": {
+          "type": "string",
+          "description": "The attachment name."
+        }
+      },
+      "required": [
+        "issueId", "attachmentName"
+      ]
+    },
+    "outputSchema": {
+      "description": "Attachment data.",
+      "type": "object",
+      "properties": {
+        "base64content": {
+          "type": "string",
+          "description": "Attachment base64 content"
+        },
+        "name": {
+          "type": "string",
+          "description": "Attachment name"
+        },
+        "mymeType": {
+          "type": "boolean",
+          "description": "Attachment mimy type like application/pdf"
+        }
+      }
+    }
+  },
+  {
     "id": "change_issue_assignee",
     "provider": "youtrack",
     "name": "Change Issue Assignee",

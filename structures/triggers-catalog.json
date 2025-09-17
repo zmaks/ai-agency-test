@@ -1,23 +1,22 @@
 [
   {
     "type": "trigger",
-    "name": "Event Trigger",
-    "description": "Subscribes to an external event (e.g., YouTrack 'attachment added'), emits the normalized event payload on output.event.",
-    "inputSchema": {
-      "type": "object",
-      "properties": {
-        "entityType": { "type": "string", "enum": ["Issue", "Article"] },
-        "eventType": { "type": "string", "enum": ["created", "updated", "removed"] },
-        "updatedField": { "type": "string", "enum": ["summary", "description", "comment", "attachment", "state"] },
-        "fieldUpdateType": { "type": "string", "enum": ["modified", "itemAdded", "itemRemoved"] }
-      },
-      "required": ["entityType", "eventType", "updatedField", "fieldUpdateType"]
-    },
+    "id": "attachment_added",
+    "name": "On issue attachment added",
+    "description": "Triggers workflow when a new attachment is added to an issue",
     "outputSchema": {
       "type": "object",
       "properties": {
+        "issueId": {
+          "type": "string",
+          "description": "The issue where the attachment added"
+        },
+        "attachmentName": {
+          "type": "string",
+          "description": "The added attachment name"
+        }
       },
-      "required": ["event"]
+      "required": ["issueId", "attachmentName"]
     }
   }
 ]
