@@ -6,10 +6,12 @@
     "inputSchema": {
       "type": "object",
       "properties": {
-        "source": { "type": "string", "description": "Event source identifier, e.g. 'youtrack'." },
-        "triggerId": { "type": "string", "description": "Trigger ID, e.g. 'attachment_added'." }
+        "entityType": { "type": "string", "enum": ["Issue", "Article"] },
+        "eventType": { "type": "string", "enum": ["created", "updated", "removed"] },
+        "updatedField": { "type": "string", "enum": ["summary", "description", "comment", "attachment", "state"] },
+        "fieldUpdateType": { "type": "string", "enum": ["modified", "itemAdded", "itemRemoved"] }
       },
-      "required": ["source", "triggerId"]
+      "required": ["entityType", "eventType", "updatedField", "fieldUpdateType"]
     },
     "outputSchema": {
       "type": "object",

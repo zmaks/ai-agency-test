@@ -80,7 +80,7 @@
       "description": "Normalizes to uppercase, dedupes, and sets boolean `ok`.",
       "input": {
         "code": "const m=(args.mentions||[]).map(s=>String(s).toUpperCase()); const uniq=[...new Set(m)]; return { ok: uniq.length>0, mentions: uniq, mentionsCsv: uniq.join(', ') };",
-        "args": "#mentions_extract.output"
+        "args": "#mentions_extract.output.result"
       },
       "next": [
         {
@@ -101,7 +101,7 @@
       "name": "Build Comment Text",
       "description": "Creates a comment like: ‘Found issue mentions in attachment: ...’.",
       "input": {
-        "template": "Found issue mentions in attachment:\n {{args.mentionsCsv}}",
+        "template": "Found issue mentions in attachment:\n ${args.mentionsCsv}",
         "args": "#has_mentions.output"
       },
       "next": [

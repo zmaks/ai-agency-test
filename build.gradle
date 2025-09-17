@@ -18,15 +18,30 @@ ext {
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
-    implementation("org.jetbrains.kotlin:kotlin-reflect")
+    //implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+    //implementation("org.jetbrains.kotlin:kotlin-reflect")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.20.0")
 
     // Spring AI for OpenAI integration
     implementation("org.springframework.ai:spring-ai-starter-model-openai")
 
+    // GraalJS (Polyglot JavaScript engine) for expression evaluation
+    implementation("org.graalvm.polyglot:polyglot:24.1.1")
+    implementation("org.graalvm.js:js:24.1.1")
+
+    // Coroutines: force to required version explicitly in classpath
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.10.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.10.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactive:1.10.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-bom:1.6.3")
+
+    // https://mvnrepository.com/artifact/ch.qos.logback/logback-classic
+    implementation("ch.qos.logback:logback-classic:1.5.18")
+
     // Existing dependencies (kept if needed elsewhere)
     //implementation("io.modelcontextprotocol.sdk:mcp:0.12.1")
-    //implementation("ai.koog:koog-agents:0.4.1")
+    implementation("ai.koog:koog-agents:0.4.1")
     //implementation("io.github.a2asdk:a2a-java-sdk-client:0.3.0.Alpha1")
     //implementation("io.github.a2asdk:a2a-java-sdk-client-transport-jsonrpc:0.3.0.Alpha1")
     //implementation("io.github.a2asdk:a2a-java-sdk-reference-jsonrpc:0.3.0.Alpha1")
@@ -43,6 +58,17 @@ dependencyManagement {
 
 kotlin {
     jvmToolchain(21)
+}
+
+// Force specific library versions across all configurations
+configurations.all {
+    resolutionStrategy {
+        force 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2'
+        force 'org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.10.2'
+        force 'org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.10.2'
+        force 'org.jetbrains.kotlinx:kotlinx-coroutines-reactive:1.10.2'
+        force 'org.jetbrains.kotlinx:kotlinx-serialization-bom:1.6.3'
+    }
 }
 
 // Configure tests

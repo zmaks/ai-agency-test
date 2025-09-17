@@ -1,0 +1,23 @@
+[
+  {
+    "type": "trigger",
+    "name": "Event Trigger",
+    "description": "Subscribes to an external event (e.g., YouTrack 'attachment added'), emits the normalized event payload on output.event.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "entityType": { "type": "string", "enum": ["Issue", "Article"] },
+        "eventType": { "type": "string", "enum": ["created", "updated", "removed"] },
+        "updatedField": { "type": "string", "enum": ["summary", "description", "comment", "attachment", "state"] },
+        "fieldUpdateType": { "type": "string", "enum": ["modified", "itemAdded", "itemRemoved"] }
+      },
+      "required": ["entityType", "eventType", "updatedField", "fieldUpdateType"]
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+      },
+      "required": ["event"]
+    }
+  }
+]
