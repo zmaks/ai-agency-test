@@ -42,6 +42,7 @@ Remember: Respond with ONLY the JSON object, no other text.`
     private val workflowExample = Resources.read("workflow.json")
     private val nodes = Resources.read("nodes.json")
     private val actions = Resources.read("actions.json")
+    private val triggers = Resources.read("triggers.json")
 
     fun generate(request: WorkflowRequest): WorkflowResponse {
         val prompt = request.prompt
@@ -57,6 +58,10 @@ Remember: Respond with ONLY the JSON object, no other text.`
             // Nodes
             append("Available node types:\n")
             append(nodes)
+            append("\n\n")
+            // Triggers
+            append("Available triggers:\n")
+            append(triggers)
             append("\n\n")
             // Actions
             append("Available actions:\n")

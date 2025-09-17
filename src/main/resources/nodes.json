@@ -6,9 +6,12 @@
     "inputSchema": {
       "type": "object",
       "properties": {
-        "triggerId": { "type": "string" }
+        "entityType": { "type": "string", "enum": ["Issue", "Article"] },
+        "eventType": { "type": "string", "enum": ["created", "updated", "removed"] },
+        "updatedField": { "type": "string", "enum": ["summary", "description", "comment", "attachment", "state"] },
+        "fieldUpdateType": { "type": "string", "enum": ["modified", "itemAdded", "itemRemoved"] }
       },
-      "required": ["triggerId"]
+      "required": ["entityType", "eventType", "updatedField", "fieldUpdateType"]
     },
     "outputSchema": {
       "type": "object",
@@ -91,8 +94,13 @@
           "description": "Base64-encoded content (e.g., file).",
           "contentEncoding": "base64"
         },
-        "filename": { "type": "string", "description": "Original filename (helps with heuristics/OCR)." }
+        "filename": { "type": "string", "description": "Original filename (helps with heuristics/OCR)." },
+        "text": { "type": "string", "description": "Plain text to extract from (alternative to file)." }
       },
+      "oneOf": [
+        { "required": ["text"] },
+        { "required": ["base64content"] }
+      ],
       "required": ["instructions", "outputJsonSchema"]
     },
     "outputSchema": {

@@ -1,0 +1,22 @@
+[
+  {
+    "type": "trigger",
+    "id": "attachment_added",
+    "name": "On issue attachment added",
+    "description": "Triggers workflow when a new attachment is added to an issue",
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "issueId": {
+          "type": "string",
+          "description": "The issue where the attachment added"
+        },
+        "attachmentName": {
+          "type": "string",
+          "description": "The added attachment name"
+        }
+      },
+      "required": ["issueId", "attachmentName"]
+    }
+  }
+]
