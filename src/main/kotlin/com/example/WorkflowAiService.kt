@@ -1,7 +1,6 @@
 package com.example
 
 import com.example.util.Resources
-import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
 import org.springframework.ai.chat.client.ChatClient
 import org.springframework.stereotype.Service
@@ -96,6 +95,7 @@ Remember: Respond with ONLY the JSON object, no other text.`
         logger.info("Workflow response:\n $content")
 
         val json = llmJsonService.ensureValidJson(content)
+
         return WorkflowResponse(content = json)
     }
 }
