@@ -9,5 +9,5 @@ import org.springframework.web.bind.annotation.RestController
 class VersionController {
 
     @GetMapping
-    fun getVersion() = "1"
+    fun getVersion() = "2"
 }

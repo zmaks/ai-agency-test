@@ -17,7 +17,7 @@ class WorkflowController(
 data class WorkflowRequest(
     val prompt: String,
     val workflow: String? = null,
-    val model: String = "gpt-4o-mini"
+    val model: String? = null
 )
 
 data class WorkflowResponse(

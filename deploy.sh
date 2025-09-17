@@ -2,5 +2,5 @@
 
 set +x
 
-./gradlew bootJar
+./gradlew clean bootJar
 fly deploy

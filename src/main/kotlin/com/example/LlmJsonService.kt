@@ -26,7 +26,7 @@ class LlmJsonService(
     private fun fixJson(content: String): String {
         val client = chatClientBuilder.build()
         return client.prompt()
-            .system("Fix given json. RETURN ONLY VALID JSON")
+            .system("Fix the given json.\nRETURN ONLY VALID JSON")
             .user(content)
             .call()
             .content()
