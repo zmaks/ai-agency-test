@@ -9,24 +9,8 @@
       "description": "Receives YouTrack 'attachment added' event and exposes it as `event`.",
       "next": [
         {
-          "nextNodeId": "pick_ids",
-          "relationDescription": "Produces event consumed by Pick IDs."
-        }
-      ]
-    },
-    {
-      "id": "pick_ids",
-      "type": "js",
-      "name": "Pick IDs",
-      "description": "Extracts issueId and attachmentId from the trigger event.",
-      "input": {
-        "code": "return { issueId: args.issueId, attachmentId: args.attachmentId };",
-        "args": "#attachment_added.output.event"
-      },
-      "next": [
-        {
           "nextNodeId": "get_attachment",
-          "relationDescription": "Provides IDs to YouTrack: GetAttachment."
+          "relationDescription": "Produces event consumed by Pick IDs."
         }
       ]
     },
@@ -39,8 +23,8 @@
         "actionId": "get_attachment",
         "provider": "youtrack",
         "actionInput": {
-          "issueId": "#pick_ids.output.issueId",
-          "attachmentName": "#pick_ids.output.attachmentName"
+          "issueId": "#get_attachment.output.issueId",
+          "attachmentName": "#get_attachment.output.attachmentName"
         }
       },
       "next": [

@@ -9,24 +9,8 @@
       "description": "Triggered when an attachment is added to a YouTrack issue. Exposes event payload as `event`.",
       "next": [
         {
-          "nextNodeId": "pick_ids",
-          "relationDescription": "Passes event to pick IDs node."
-        }
-      ]
-    },
-    {
-      "id": "pick_ids",
-      "type": "js",
-      "name": "Pick IDs",
-      "description": "Extracts issueId and attachmentId from the trigger event.",
-      "input": {
-        "code": "const ev=args.event||{}; const issueId=ev.issueId||ev.issue?.id||ev.issueId; const attachmentId=ev.attachmentId||ev.attachment?.id||ev.attachment?.id; return { issueId, attachmentId };",
-        "args": "#attachment_added.output.event"
-      },
-      "next": [
-        {
           "nextNodeId": "get_attachment",
-          "relationDescription": "Provides IDs to download the attachment."
+          "relationDescription": "Passes event to pick IDs node."
         }
       ]
     },
@@ -39,8 +23,8 @@
         "actionId": "get_attachment",
         "provider": "youtrack",
         "actionInput": {
-          "issueId": "#pick_ids.output.issueId",
-          "attachmentId": "#pick_ids.output.attachmentId"
+          "issueId": "#attachment_added.output.issueId",
+          "attachmentName": "#attachment_added.output.attachmentName"
         }
       },
       "next": [
@@ -72,7 +56,7 @@
           ]
         },
         "mimeType": "#get_attachment.output.mimeType",
-        "base64content": "#get_attachment.output.blobRef",
+        "base64Content": "#get_attachment.output.base64Content",
         "filename": "#get_attachment.output.filename"
       },
       "next": [
