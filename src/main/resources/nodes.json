@@ -89,7 +89,7 @@
           "additionalProperties": true
         },
         "mimeType": { "type": "string", "description": "MIME of the content if provided inline." },
-        "base64content": {
+        "base64Content": {
           "type": "string",
           "description": "Base64-encoded content (e.g., file).",
           "contentEncoding": "base64"
@@ -99,7 +99,7 @@
       },
       "oneOf": [
         { "required": ["text"] },
-        { "required": ["base64content"] }
+        { "required": ["base64Content"] }
       ],
       "required": ["instructions", "outputJsonSchema"]
     },

@@ -47,7 +47,7 @@
           "required": ["mentions"]
         },
         "mimeType": "#get_attachment.output.mimeType",
-        "base64content": "#get_attachment.output.base64content",
+        "base64content": "#get_attachment.output.base64Content",
         "filename": "#get_attachment.output.name"
       },
       "next": [
