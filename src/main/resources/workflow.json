@@ -87,11 +87,6 @@
           "nextNodeId": "comment_text",
           "relationDescription": "Runs only when mentions exist.",
           "invokeCondition": "#this.output.ok == true"
-        },
-        {
-          "nextNodeId": "exit",
-          "relationDescription": "Stop when there are no mentions.",
-          "invokeCondition": "#this.output.ok != true"
         }
       ]
     },
