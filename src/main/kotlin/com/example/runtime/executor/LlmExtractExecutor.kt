@@ -9,6 +9,8 @@ import org.springframework.ai.chat.messages.SystemMessage
 import org.springframework.ai.chat.messages.UserMessage
 import org.springframework.ai.chat.model.ChatModel
 import org.springframework.ai.chat.prompt.Prompt
+import org.springframework.ai.content.Media
+import org.springframework.util.MimeType
 import java.util.*
 
 /**
@@ -71,15 +73,27 @@ class LlmExtractExecutor : NodeExecutor {
 
         val forceStub: Boolean = (resolveIfRef(input["forceStub"], ctx, node) as? Boolean) == true
 
+        val chatModel = SpringContext.getBean(ChatModel::class.java)
         // 1) Obtain raw text to analyze
-        val rawText: String = when {
-            !text.isNullOrBlank() -> text
-            !base64content.isNullOrBlank() -> {
-                // Try to decode as UTF-8 text; if fails, keep stub text placeholder
-                decodeBase64ToString(base64content) ?: "BINARY_CONTENT(${mimeType ?: "application/octet-stream"})"
-            }
-            else -> ""
-        }
+
+        val prompt = Prompt(listOf(
+            SystemMessage("You are an file text extraction assistant. Return ONLY file text."),
+            UserMessage.builder().text("RETURN ONLY TEXT FROM THE FILE").media(Media.builder()
+                .id(filename ?: "file")
+                .data(Base64.getDecoder().decode(base64content))
+                .mimeType(MimeType.valueOf(mimeType!!)).build()).build()
+        ))
+        // Fallback to simple string call to avoid API differences
+        val rawText: String = chatModel.call(prompt).result.output.text.trim()
+
+//        val rawText: String = when {
+//            !text.isNullOrBlank() -> text
+//            !base64content.isNullOrBlank() -> {
+//                // Try to decode as UTF-8 text; if fails, keep stub text placeholder
+//                decodeBase64ToString(base64content) ?: "BINARY_CONTENT(${mimeType ?: "application/octet-stream"})"
+//            }
+//            else -> ""
+//        }
 
         // 2) Extract structured JSON
         val apiKey = System.getenv("SPRING_AI_OPENAI_APIKEY")
@@ -91,7 +105,7 @@ class LlmExtractExecutor : NodeExecutor {
 
         try {
 
-            val chatModel = SpringContext.getBean(ChatModel::class.java)
+
             val system = SystemMessage(
                 "You are an information extraction assistant. Given instructions and a JSON schema, produce ONLY valid minified JSON that matches the schema. Do not include any extra commentary."
             )
@@ -107,11 +121,11 @@ class LlmExtractExecutor : NodeExecutor {
             )
             val prompt = Prompt(listOf(system, user))
             // Fallback to simple string call to avoid API differences
-            val modelOutput = chatModel.call(system.text + "\n\n" + user.text)
+            val modelOutput = chatModel.call(prompt)
 
             // Parse JSON strictly; if fails, wrap error
             resultObject = try {
-                mapper.readValue(modelOutput, JsonNode::class.java)
+                mapper.readValue(modelOutput.result.output.text, JsonNode::class.java)
             } catch (e: Exception) {
                 logger.error("llm.extract node id='{}' invalid model JSON. output: {}", node.id, modelOutput, e)
                 return ResultEnvelope(
@@ -152,28 +166,9 @@ class LlmExtractExecutor : NodeExecutor {
         else -> v
     }
 
-    private fun decodeBase64ToString(b64: String): String? = try {
-        val bytes = Base64.getDecoder().decode(b64)
-        String(bytes, Charsets.UTF_8)
-    } catch (_: Throwable) { null }
-
-    private fun extFromMime(mimeType: String): String = when (mimeType.lowercase(Locale.getDefault())) {
-        "application/pdf" -> "pdf"
-        "text/plain" -> "txt"
-        else -> "txt"
-    }
-
     private fun meta(node: NodeDef, mode: String?): Map<String, Any?> = mapOf(
         "nodeId" to node.id,
         "type" to node.type,
         "mode" to mode
     )
-
-    private fun containsSchemaProperty(schema: Map<*, *>, key: String): Boolean {
-        val props = schema["properties"]
-        return when (props) {
-            is Map<*, *> -> props.containsKey(key)
-            else -> false
-        }
-    }
 }
