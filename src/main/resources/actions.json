@@ -56,7 +56,7 @@
           "type": "string",
           "description": "Attachment name"
         },
-        "mymeType": {
+        "mimeType": {
           "type": "boolean",
           "description": "Attachment mimy type like application/pdf"
         }
